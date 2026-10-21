@@ -1,59 +1,77 @@
-You are an expert in TypeScript, Angular, and scalable web application development. You write functional, maintainable, performant, and accessible code following Angular and TypeScript best practices.
+# Instrucciones para agentes — ci-frontend
 
-## TypeScript Best Practices
+SPA del centro de idiomas construida con TypeScript y Angular 22. Es el cliente de la API REST del Gateway; nunca se conecta directamente con Moodle, intranet, Niubiz, Nubefact, bases de datos ni microservicios internos.
 
-- Use strict type checking
-- Prefer type inference when the type is obvious
-- Avoid the `any` type; use `unknown` when type is uncertain
+## Stack
 
-## Angular Best Practices
+- Angular 22, zoneless, SPA sin SSR y compilación AOT en producción.
+- Node.js 22, TypeScript estricto, Angular Signals y Signal Forms.
+- Tailwind CSS para layouts y SCSS para componentes reutilizables.
+- Vitest, Angular testing utilities y Axe para pruebas.
+- Este repositorio provee su `Dockerfile`; `ci-deploy` orquesta frontend, backend e infraestructura con Docker Compose.
 
-- Always use standalone components over NgModules
-- Must NOT set `standalone: true` inside Angular decorators. It's the default in Angular v20+.
-- Do NOT set `changeDetection: ChangeDetectionStrategy.OnPush` explicitly. `OnPush` is the default in Angular v22+.
-- Use signals for state management
-- Implement lazy loading for feature routes
-- Do NOT use the `@HostBinding` and `@HostListener` decorators. Put host bindings inside the `host` object of the `@Component` or `@Directive` decorator instead
-- Use `NgOptimizedImage` for all static images.
-  - `NgOptimizedImage` does not work for inline base64 images.
+## Arquitectura
 
-## Accessibility Requirements
+Estructura dentro de `src/app/`:
 
-- It MUST pass all AXE checks.
-- It MUST follow all WCAG AA minimums, including focus management, color contrast, and ARIA attributes.
+- `core/`: configuración de aplicación, clientes HTTP, interceptores, guards funcionales, manejo de sesión y utilidades transversales.
+- `shared/ui/`: componentes presentacionales puros y reutilizables; no inyectan servicios de negocio.
+- `layouts/`: shells de autenticación y aplicación.
+- `features/`: dominios aislados: `auth`, `students`, `academic`, `enrollment`, `attendance-grades`, `exams` y `payments`.
+  - Cada dominio contiene `components/`, `data-access/`, `models/`, `pages/` y, cuando corresponda, `state/`.
 
-## Components
+Un dominio no importa detalles internos de otro. Comparte únicamente UI, tipos o utilidades realmente transversales desde `shared/` o `core/`.
 
-- Keep components small and focused on a single responsibility
-- Use `input()` and `output()` functions instead of decorators
-- Use `model()` for two-way bound properties with `[(prop)]` syntax instead of pairing `input()` with `output()`
-- Use `computed()` for derived state
-- Use `linkedSignal()` for state derived from multiple reactive sources that must stay synchronized
-- Prefer inline templates for small components
-- Prefer Signal Forms (`@angular/forms/signals`) for new forms. They are stable in Angular v22+ and provide signal-based state, type-safe field access, and schema-based validation
-- When not using Signal Forms, prefer Reactive forms instead of Template-driven ones
-- Do NOT use `ngClass`, use `class` bindings instead
-- Do NOT use `ngStyle`, use `style` bindings instead
-- Do NOT import `CommonModule`, import only the directives and pipes the template uses, such as `AsyncPipe` or `DatePipe`
-- When using external templates/styles, use paths relative to the component TS file.
+## TypeScript, DDD y diseño
 
-## State Management
+- Todo el código de aplicación, pruebas y configuración se escribe en TypeScript estricto. Prohibido `any`, `@ts-ignore` y conversiones inseguras; usa `unknown`, type guards y validación al recibir datos externos.
+- Aplica DDD pragmático, SOLID y DRY: evita duplicar conocimiento, pero no crees abstracciones prematuras ni servicios genéricos gigantes.
+- Usa Adapter para convertir DTOs del backend en modelos de vista estrictos. El JSON crudo de `HttpClient` nunca llega a un componente.
+- Mantén la lógica de negocio fuera de componentes y templates. Los guards solo mejoran la experiencia; la autorización real siempre la impone el backend.
 
-- Use signals for local component state
-- Use `computed()` for derived state
-- Keep state transformations pure and predictable
-- Do NOT use `mutate` on signals, use `update` or `set` instead
+## Angular 22
 
-## Templates
+- Componentes pequeños, cohesionados y standalone por defecto. No declares explícitamente `standalone: true` ni `OnPush` cuando sean valores predeterminados.
+- Usa `inject()` en lugar de inyección por constructor. Para servicios globales usa `@Service()`; para proveedores con otro alcance, usa `@Injectable()` de forma explícita.
+- Usa `input()`, `output()` y `viewChild()`; no uses `@Input`, `@Output` ni `@ViewChild`.
+- Usa Signals: `computed()` para estado derivado y `.set()`/`.update()` para cambios. No uses `.mutate()`.
+- Limita RxJS a `data-access/`. Convierte resultados a Signals con `toSignal()` o usa `async`; cancela/limpia suscripciones cuando corresponda.
+- Usa Signal Forms para formularios nuevos. Si no aplica, usa Reactive Forms; no uses formularios template-driven.
 
-- Keep templates simple and avoid complex logic
-- Use native control flow (`@if`, `@for`, `@switch`) instead of `*ngIf`, `*ngFor`, `*ngSwitch`
-- Use the async pipe to handle observables
-- Do not assume globals like (`new Date()`) are available.
+## Templates, estilos y accesibilidad
 
-## Services
+- Usa `@if`, `@for`, `@switch` y `@defer`; no uses `*ngIf`, `*ngFor` ni `*ngSwitch`.
+- No uses `[ngClass]` ni `[ngStyle]`; usa bindings nativos de clase/estilo.
+- Usa `NgOptimizedImage` (`ngSrc`) para imágenes estáticas cuando corresponda.
+- Smart components (`features/`, `layouts/`) usan Tailwind en el template. `shared/ui/` usa nombres semánticos y SCSS con `@apply` para comportamiento visual reutilizable.
+- Cumple WCAG 2.2 AA: semántica HTML, foco visible y administrado en cambios de ruta/modales, navegación por teclado, contraste, etiquetas accesibles y mensajes de error anunciables. Ejecuta Axe en flujos nuevos o modificados.
 
-- Design services around a single responsibility
-- Use the `providedIn: 'root'` option for singleton services
-- Prefer the `@Service` decorator over `@Injectable({providedIn: 'root'})` for new singleton services (Angular v22+)
-- Use the `inject()` function instead of constructor injection
+## Seguridad obligatoria
+
+- Diseña contra el [OWASP Top 10:2025](https://top10.owasp.org/2025/0x00_2025-Introduction/) y el [OWASP Web Frontend Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Web_Frontend_Security_Cheat_Sheet.html). Todo dato de usuario, API, caché, URL, `postMessage` o proveedor externo es no confiable.
+- Mantén Angular, dependencias y `package-lock.json` actualizados. Ejecuta `npm audit` y no despliegues hallazgos altos/críticos sin evaluación y mitigación documentada.
+- No uses `innerHTML`, `outerHTML`, `document.write`, `eval`, `Function`, compilación JIT ni plantillas dinámicas con datos externos. No llames a `DomSanitizer.bypassSecurityTrust*` salvo revisión explícita de seguridad, allowlist estricta y prueba dedicada.
+- Producción usa AOT. Activa `security.autoCsp` en `angular.json` y configura en el servidor/CDN una CSP mediante encabezado HTTP, incluyendo `frame-ancestors`, `base-uri`, `object-src`, `connect-src`, `img-src`, `form-action`, `upgrade-insecure-requests` y `Trusted Types` compatibles con Angular. No agregues `unsafe-eval`; cualquier excepción de CSP requiere justificación y prueba.
+- Configura Trusted Types con `require-trusted-types-for 'script'` y las políticas Angular mínimas necesarias (`angular`, `angular#bundler`). No habilites `angular#unsafe-bypass` ni `angular#unsafe-jit` salvo revisión formal.
+- El frontend no controla CORS: el Gateway debe permitir únicamente orígenes explícitos. `environment` solo contiene URLs públicas de API; nunca secretos, claves de Niubiz/Nubefact, tokens de Moodle ni credenciales.
+- Prefiere sesión con cookies `HttpOnly`, `Secure`, `SameSite` apropiado y protección CSRF del backend. No guardes access tokens, refresh tokens, contraseñas, DNI, datos de pago o PII sensible en `localStorage`, `sessionStorage`, URL, logs, analytics o estado persistente.
+- Envía `withCredentials` y encabezados CSRF solo al Gateway de origen explícitamente confiable. No reenvíes tokens/headers a URLs elegidas por el usuario ni a terceros.
+- Al cerrar sesión, limpia estado en memoria, cachés de aplicación y datos mostrados. Las respuestas sensibles deben llegar con `Cache-Control: no-store` desde el backend; el cliente no debe guardarlas offline.
+- Valida formularios en cliente para UX, pero asume que el backend vuelve a validar, autoriza y limita toda operación. Muestra errores genéricos; no reveles stack traces, DTOs internos ni detalles de seguridad.
+- Para enlaces externos usa URLs con allowlist y `rel="noopener noreferrer"` al abrir otra pestaña. Valida origen, esquema y formato de todo `postMessage` antes de procesarlo.
+- Para pagos usa checkout/redirección o campos hospedados por Niubiz. Nunca captures, registres, almacenes ni proceses PAN, CVV o datos de tarjeta; el estado final proviene del backend/webhook, no de parámetros de retorno del navegador.
+- Para cargas de archivos limita formato y tamaño en UI solo como ayuda; el backend realiza la validación y antivirus definitivos. No previsualices HTML/SVG/PDF no confiable como contenido ejecutable.
+- No incluyas Swagger, paneles administrativos ni archivos fuente/mapas de producción públicamente sin necesidad. Los source maps se publican solo si están protegidos y son requeridos para observabilidad.
+
+## HTTP, estado e interoperabilidad
+
+- Centraliza `HttpClient` en `data-access/` con interceptores para credenciales, CSRF, correlación y errores. No implementes autenticación ni redirecciones de pago mediante llamadas manuales dispersas.
+- Define DTOs de entrada/salida, validadores y Adapters por endpoint. Trata las respuestas incompletas o malformadas como errores controlados.
+- Usa HTTPS y una base URL configurada por entorno. No construyas URLs desde texto controlado por usuario ni permitas redirecciones abiertas.
+- Moodle, intranet, Nubefact y Niubiz son integraciones exclusivas del backend. La SPA consume únicamente contratos REST públicos versionados del Gateway.
+
+## Verificación antes de entregar
+
+- Ejecuta `npm run build`, `npm run test` y `npm audit`.
+- Añade o actualiza pruebas para componentes, adapters, guards, interceptores, formularios y rutas modificadas; incluye pruebas de autorización de UX y accesibilidad cuando aplique.
+- Revisa manualmente CORS/CSP, ausencia de secretos/PII en bundles y logs, manejo de sesión/CSRF y la respuesta de errores del backend en flujos sensibles.
