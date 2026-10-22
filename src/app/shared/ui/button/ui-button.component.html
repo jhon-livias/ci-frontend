@@ -1,6 +1,9 @@
 <button
   class="button"
   [class.button--secondary]="variant() === 'secondary'"
+  [class.button--soft]="variant() === 'soft'"
+  [class.button--full-width]="fullWidth()"
+  [class.button--pill]="pill()"
   [disabled]="disabled()"
   [type]="type()"
 >

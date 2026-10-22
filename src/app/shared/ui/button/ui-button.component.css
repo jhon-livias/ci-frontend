@@ -1,4 +1,12 @@
+:host {
+  display: block;
+}
+
 .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   min-height: 2.75rem;
   padding: 0.75rem 1rem;
   color: white;
@@ -26,4 +34,22 @@
 
 .button--secondary:hover {
   background: var(--color-background-light-gray);
+}
+
+.button--soft {
+  color: var(--color-text);
+  border-color: transparent;
+  background: var(--color-brand-light);
+}
+
+.button--soft:hover {
+  background: color-mix(in srgb, var(--color-brand-light) 85%, var(--color-brand-primary));
+}
+
+.button--full-width {
+  width: 100%;
+}
+
+.button--pill {
+  border-radius: 9999px;
 }

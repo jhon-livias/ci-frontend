@@ -7,6 +7,8 @@ import { Component, input } from '@angular/core';
 })
 export class UiButtonComponent {
   readonly type = input<'button' | 'submit' | 'reset'>('button');
-  readonly variant = input<'primary' | 'secondary'>('primary');
+  readonly variant = input<'primary' | 'secondary' | 'soft'>('primary');
   readonly disabled = input(false);
+  readonly fullWidth = input(false);
+  readonly pill = input(false);
 }

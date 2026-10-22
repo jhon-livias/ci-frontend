@@ -1,0 +1,47 @@
+<app-auth-layout>
+  <section aria-labelledby="login-title">
+    <h1 class="sr-only" id="login-title">Iniciar sesión</h1>
+
+    <form [formRoot]="loginForm" (submit)="submit()" class="space-y-4" aria-describedby="login-notice">
+      <ui-field
+        [formField]="loginForm.username"
+        autocomplete="username"
+        id="username"
+        label="Usuario"
+        placeholder="Ingresa tu usuario"
+      />
+
+      <ui-field
+        [formField]="loginForm.password"
+        autocomplete="current-password"
+        id="password"
+        label="Contraseña"
+        placeholder="Ingresa tu contraseña"
+        [showPasswordToggle]="true"
+        type="password"
+      />
+
+      <ui-button class="mt-2" [disabled]="isSubmitting()" [fullWidth]="true" [pill]="true" type="submit">
+        {{ isSubmitting() ? 'Ingresando…' : 'Iniciar sesión' }}
+      </ui-button>
+    </form>
+
+    <div class="my-5 flex items-center gap-4 text-sm text-[#7c8691]" aria-hidden="true">
+      <span class="h-px flex-1 bg-[#dfd6d6]"></span><span>o</span><span class="h-px flex-1 bg-[#dfd6d6]"></span>
+    </div>
+
+    <ui-button [fullWidth]="true" [pill]="true" variant="soft" type="button" (click)="notifyUnavailable('Google')">
+      Continuar con Google
+    </ui-button>
+
+    <div class="mt-6 text-center text-sm">
+      <a class="font-semibold text-[#92001f] underline-offset-4 hover:underline" routerLink="/recuperar-contrasena">
+        ¿Olvidaste tu contraseña?
+      </a>
+    </div>
+
+    <p class="mt-5 min-h-5 text-center text-sm text-[#5e5254]" id="login-notice" aria-live="polite">
+      {{ notice() }}
+    </p>
+  </section>
+</app-auth-layout>
