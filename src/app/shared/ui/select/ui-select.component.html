@@ -1,0 +1,21 @@
+<div class="select">
+  <label class="select__label" [for]="id()">
+    {{ label() }}
+    @if (required()) {
+      <span aria-hidden="true">*</span>
+    }
+  </label>
+  <select
+    class="select__control"
+    [disabled]="disabled()"
+    [id]="id()"
+    [required]="required()"
+    [value]="value()"
+    (change)="onValueChange($event)"
+  >
+    <option value="">{{ placeholder() }}</option>
+    @for (option of options(); track option.value) {
+      <option [disabled]="option.disabled ?? false" [value]="option.value">{{ option.label }}</option>
+    }
+  </select>
+</div>

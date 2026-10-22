@@ -1,0 +1,27 @@
+.select {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.select__label {
+  font-family: var(--font-heading);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.select__control {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.75rem 2.75rem 0.75rem 1rem;
+  color: var(--color-text);
+  font: inherit;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.select__control:disabled {
+  cursor: not-allowed;
+  color: var(--color-text-muted);
+  background: var(--color-background-light-gray);
+}

@@ -1,0 +1,13 @@
+.alert {
+  padding: 0.875rem 1rem;
+  color: var(--color-brand-gray);
+  border: 1px solid var(--color-brand-light);
+  border-radius: var(--radius-md);
+  background: var(--color-background-light-gray);
+}
+
+.alert--error {
+  color: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
+  background: color-mix(in srgb, var(--color-brand-light) 30%, white);
+}

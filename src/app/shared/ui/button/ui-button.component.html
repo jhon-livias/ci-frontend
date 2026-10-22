@@ -1,0 +1,8 @@
+<button
+  class="button"
+  [class.button--secondary]="variant() === 'secondary'"
+  [disabled]="disabled()"
+  [type]="type()"
+>
+  <ng-content />
+</button>
