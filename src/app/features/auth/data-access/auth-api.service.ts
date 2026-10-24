@@ -6,12 +6,18 @@ import { AuthenticatedUser, type ApplicationRole } from '../models/authenticated
 import type { LoginCredentials } from '../models/login-credentials.model';
 
 interface LoginResponseDto {
+  readonly csrfToken: string;
   readonly user: {
     readonly id: string;
     readonly username: string;
     readonly roles: readonly string[];
     readonly profile: { readonly firstName: string; readonly paternalLastName: string } | null;
   };
+}
+
+export interface AuthSessionSnapshot {
+  readonly user: AuthenticatedUser;
+  readonly csrfToken: string;
 }
 
 const applicationRoles: readonly ApplicationRole[] = ['STUDENT', 'TEACHER', 'ADVISOR', 'DIRECTOR', 'ADMINISTRATOR'];
@@ -29,6 +35,7 @@ const isLoginResponseDto = (value: unknown): value is LoginResponseDto => {
       typeof (profile as Record<string, unknown>)['firstName'] === 'string' &&
       typeof (profile as Record<string, unknown>)['paternalLastName'] === 'string');
   return (
+    typeof (value as Record<string, unknown>)['csrfToken'] === 'string' &&
     typeof candidate['id'] === 'string' &&
     typeof candidate['username'] === 'string' &&
     Array.isArray(candidate['roles']) &&
@@ -41,7 +48,7 @@ const isLoginResponseDto = (value: unknown): value is LoginResponseDto => {
 export class AuthApiService {
   private readonly http = inject(HttpClient);
 
-  async login(credentials: LoginCredentials): Promise<AuthenticatedUser> {
+  async login(credentials: LoginCredentials): Promise<AuthSessionSnapshot> {
     const response = await firstValueFrom(
       this.http.post<unknown>('/api/v1/auth/login', credentials, { withCredentials: true }),
     );
@@ -56,11 +63,32 @@ export class AuthApiService {
     }
 
     const profile = response.user.profile;
-    return {
+    return { csrfToken: response.csrfToken, user: {
       id: response.user.id,
       username: response.user.username,
       roles,
       displayName: profile ? `${profile.firstName} ${profile.paternalLastName}` : null,
-    };
+    }};
+  }
+
+  async session(): Promise<AuthSessionSnapshot> {
+    const response = await firstValueFrom(this.http.get<unknown>('/api/v1/auth/session', { withCredentials: true }));
+    return this.toSession(response);
+  }
+
+  async refresh(): Promise<AuthSessionSnapshot> {
+    const response = await firstValueFrom(this.http.post<unknown>('/api/v1/auth/refresh', {}, { withCredentials: true }));
+    return this.toSession(response);
+  }
+
+  private toSession(response: unknown): AuthSessionSnapshot {
+    if (!isLoginResponseDto(response)) throw new Error('La respuesta de autenticación no tiene un formato válido.');
+    const roles = response.user.roles.filter((role): role is ApplicationRole => applicationRoles.includes(role as ApplicationRole));
+    if (roles.length !== response.user.roles.length) throw new Error('La respuesta de autenticación contiene un rol no reconocido.');
+    const profile = response.user.profile;
+    return { csrfToken: response.csrfToken, user: {
+      id: response.user.id, username: response.user.username, roles,
+      displayName: profile ? `${profile.firstName} ${profile.paternalLastName}` : null,
+    }};
   }
 }

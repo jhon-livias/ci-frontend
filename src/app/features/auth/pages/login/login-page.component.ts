@@ -37,9 +37,9 @@ export class LoginPageComponent {
     this.notice.set(null);
     this.isSubmitting.set(true);
     try {
-      const user = await this.authApi.login(this.credentials());
-      this.session.start(user);
-      await this.router.navigateByUrl(user.roles.includes('ADMINISTRATOR') ? '/administracion' : '/inicio');
+      const authenticatedSession = await this.authApi.login(this.credentials());
+      this.session.start(authenticatedSession);
+      await this.router.navigateByUrl(authenticatedSession.user.roles.includes('ADMINISTRATOR') ? '/administracion' : '/inicio');
     } catch {
       this.notice.set('No pudimos iniciar sesión. Verifica tus credenciales e inténtalo nuevamente.');
     } finally {
