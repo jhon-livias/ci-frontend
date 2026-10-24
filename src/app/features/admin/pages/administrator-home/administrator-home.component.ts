@@ -31,22 +31,24 @@ import { AuthApiService } from '../../../auth/data-access/auth-api.service';
         <div
           class="-mr-5 flex h-full items-center gap-3 rounded-bl-[2rem] bg-[#a9002d] px-5 text-white sm:-mr-8 sm:gap-4 sm:rounded-bl-[2.5rem] sm:px-8"
         >
-          <img
-            class="h-7 w-auto sm:h-9"
-            src="/assets/layout/logo-profile.svg"
-            alt=""
-          />
-          <span class="font-[var(--font-geist)] text-lg font-black leading-[120%] sm:text-[28px]">IDIOMAS UPRIT</span>
+          <img class="h-7 w-auto sm:h-9" src="/assets/layout/logo-profile.svg" alt="" />
+          <span class="font-[var(--font-geist)] text-lg font-black leading-[120%] sm:text-[28px]"
+            >UPRIT IDIOMAS</span
+          >
           <button
             class="grid size-8 place-items-center rounded-full hover:bg-white/15 sm:size-10"
             type="button"
             aria-label="Notificaciones"
-          ><img class="h-5 w-auto sm:h-7" src="/assets/layout/notification.svg" alt="" /></button><button
+          >
+            <img class="h-5 w-auto sm:h-7" src="/assets/layout/notification.svg" alt="" /></button
+          ><button
             class="grid size-8 place-items-center rounded-full hover:bg-white/15 sm:size-11"
             type="button"
             aria-label="Ver perfil"
             (click)="toggleProfile()"
-          ><img class="h-7 w-auto sm:h-10" src="/assets/layout/profile.svg" alt="" /></button>
+          >
+            <img class="h-7 w-auto sm:h-10" src="/assets/layout/profile.svg" alt="" />
+          </button>
         </div>
       </div>
       @if (menuOpen()) {
@@ -81,35 +83,29 @@ import { AuthApiService } from '../../../auth/data-access/auth-api.service';
         <h1
           class="mt-5 font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d] sm:text-3xl"
         >
-          Bienvenido a MIGA UPRIT, {{ displayName() }}
+          Bienvenido a UPRIT IDIOMAS, {{ displayName() }}
         </h1>
       </section>
       <aside
-        class="absolute right-0 top-20 z-20 w-full max-w-sm rounded-bl-3xl bg-[#eed6db] p-5 text-[#1e1e1e] shadow-lg transition-transform sm:w-80"
+        class="absolute right-0 top-20 z-20 flex min-h-[calc(100dvh-5rem)] w-full max-w-none flex-col rounded-bl-3xl bg-[#eed6db] px-10 py-9 text-[#1e1e1e] shadow-lg transition-transform sm:w-[470px] sm:px-10 sm:py-10"
         [class.translate-x-full]="!profileOpen()"
         aria-label="Perfil de usuario"
       >
-        <div class="flex items-start gap-3 border-b border-[#a9002d]/15 pb-4">
-          <span class="grid size-9 shrink-0 place-items-center rounded-full bg-white text-[#a9002d]"
-            >●</span
-          >
-          <div>
-            <p class="text-xs font-bold leading-5">{{ displayName() }}</p>
-            <p class="text-[11px] text-[#5e5254]">Administrador</p>
-          </div>
+        <div class="flex items-center gap-4">
+          <img class="size-14 shrink-0 sm:size-[58px]" src="/assets/layout/menu-profile.svg" alt="" />
+          <p class="font-[var(--font-geist)] text-xl font-semibold leading-[120%] sm:text-2xl">{{ displayName() }}</p>
         </div>
-        <div class="mt-4 flex items-start gap-3">
-          <span class="grid size-9 shrink-0 place-items-center rounded-full bg-white text-[#a9002d]"
-            >U</span
-          >
-          <p class="text-xs font-semibold leading-4">Universidad Privada de Trujillo - UPRIT</p>
+        <div class="mt-7 flex items-center gap-4">
+          <img class="size-14 shrink-0 sm:size-[58px]" src="/assets/layout/menu-logo.svg" alt="" />
+          <p class="font-[var(--font-geist)] text-xl font-semibold leading-[120%] sm:text-2xl">Universidad Privada de Trujillo - UPRIT</p>
         </div>
+        <div class="mt-8 h-px bg-white/90"></div>
         <button
-          class="mt-20 flex h-11 w-full items-center justify-center rounded-full bg-white text-sm font-bold text-[#a9002d] shadow-sm"
+          class="mx-auto mt-auto flex h-[68px] w-full max-w-[300px] items-center justify-center gap-3 rounded-full bg-white font-[var(--font-geist)] text-xl font-semibold text-[#a81a39] shadow-sm transition hover:bg-[#fff8f9]"
           type="button"
           (click)="logout()"
         >
-          Cerrar sesión
+          <img class="size-7" src="/assets/layout/logout.svg" alt="" /> Cerrar Sesión
         </button>
       </aside>
     </section>
