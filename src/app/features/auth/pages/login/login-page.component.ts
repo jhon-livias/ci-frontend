@@ -39,7 +39,7 @@ export class LoginPageComponent {
     try {
       const authenticatedSession = await this.authApi.login(this.credentials());
       this.session.start(authenticatedSession);
-      await this.router.navigateByUrl(authenticatedSession.user.roles.includes('ADMINISTRATOR') ? '/administracion' : '/inicio');
+      await this.router.navigateByUrl(this.session.defaultRoute());
     } catch {
       this.notice.set('No pudimos iniciar sesión. Verifica tus credenciales e inténtalo nuevamente.');
     } finally {

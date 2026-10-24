@@ -24,6 +24,15 @@ export class AuthSessionService {
     return this.user()?.roles.includes(role) ?? false;
   }
 
+  /** Ruta de entrada única, resuelta a partir de la sesión ya validada. */
+  defaultRoute(): string {
+    if (!this.isAuthenticated()) {
+      return '/login';
+    }
+
+    return '/inicio';
+  }
+
   async restore(): Promise<void> {
     try {
       this.start(await this.authApi.session());
