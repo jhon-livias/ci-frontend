@@ -94,12 +94,20 @@ import { AuthApiService } from '../../../auth/data-access/auth-api.service';
         (click)="$event.stopPropagation()"
       >
         <div class="flex items-center gap-4">
-          <img class="size-14 shrink-0 sm:size-[58px]" src="/assets/layout/menu-profile.svg" alt="" />
-          <p class="font-[var(--font-geist)] text-xl font-semibold leading-[120%] sm:text-2xl">{{ displayName() }}</p>
+          <img
+            class="size-14 shrink-0 sm:size-[58px]"
+            src="/assets/layout/menu-profile.svg"
+            alt=""
+          />
+          <p class="font-[var(--font-geist)] text-xl font-semibold leading-[120%] sm:text-2xl">
+            {{ displayName() }}
+          </p>
         </div>
         <div class="mt-7 flex items-center gap-4">
           <img class="size-14 shrink-0 sm:size-[58px]" src="/assets/layout/menu-logo.svg" alt="" />
-          <p class="font-[var(--font-geist)] text-xl font-semibold leading-[120%] sm:text-2xl">Universidad Privada de Trujillo - UPRIT</p>
+          <p class="font-[var(--font-geist)] text-xl font-semibold leading-[120%] sm:text-2xl">
+            Universidad Privada de Trujillo - UPRIT
+          </p>
         </div>
         <div class="mt-8 h-px bg-white/90"></div>
         <button
@@ -116,7 +124,10 @@ import { AuthApiService } from '../../../auth/data-access/auth-api.service';
         aria-label="Notificaciones"
         (click)="$event.stopPropagation()"
       >
-        <div class="flex items-center gap-4"><img class="size-14" src="/assets/layout/notification.svg" alt="" /><h2 class="font-[var(--font-geist)] text-2xl font-semibold">Notificaciones</h2></div>
+        <div class="flex items-center gap-4">
+          <img class="size-14" src="/assets/layout/notification.svg" alt="" />
+          <h2 class="font-[var(--font-geist)] text-2xl font-semibold">Notificaciones</h2>
+        </div>
         <div class="mt-8 h-px bg-white/90"></div>
         <p class="mt-8 text-center text-base text-[#5e5254]">No tienes notificaciones nuevas.</p>
       </aside>
@@ -138,9 +149,8 @@ export class AdministratorHomeComponent {
     { label: 'Módulos', icon: '▦', active: false },
     { label: 'Sedes', icon: '⌖', active: false },
     { label: 'Permisos', icon: '▤', active: false },
-    { label: 'Tipos de usuario', icon: '♟', active: false },
+    { label: 'Roles', icon: '♟', active: false },
     { label: 'Usuarios', icon: '▧', active: false },
-    { label: 'Historial', icon: '▣', active: false },
   ] as const;
   protected toggleMenu(): void {
     this.menuOpen.update((open) => !open);
