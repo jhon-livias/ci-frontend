@@ -1,11 +1,13 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { AuthSessionService } from '../../../../core/auth/auth-session.service';
+import { AuthApiService } from '../../../auth/data-access/auth-api.service';
 
 @Component({
   template: `
-    <main class="min-h-dvh bg-[#1e1e1e] sm:p-5">
-      <section class="relative mx-auto min-h-dvh max-w-7xl overflow-hidden bg-[#fcf9fa] sm:min-h-[calc(100dvh-2.5rem)] sm:shadow-2xl">
+    <main class="min-h-dvh bg-[#fcf9fa]">
+      <section class="relative min-h-dvh overflow-hidden bg-[#fcf9fa]">
         <header class="relative z-30 flex h-18 items-center justify-between bg-white px-5 shadow-sm sm:h-20 sm:px-8">
           <button class="grid size-10 place-items-center rounded-lg text-[#5e5254] hover:bg-[#faf6f7] lg:hidden" type="button" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen()" aria-controls="admin-navigation" aria-label="Abrir menú"><svg aria-hidden="true" class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
           <p class="hidden text-xs text-[#7c8691] sm:block">Inicio</p>
@@ -17,13 +19,15 @@ import { AuthSessionService } from '../../../../core/auth/auth-session.service';
         </aside>
         <section class="px-6 py-8 lg:ml-60 lg:px-14 lg:py-12"><p class="text-xs text-[#7c8691]">Inicio</p><h1 class="mt-5 font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d] sm:text-3xl">Bienvenido a MIGA UPRIT, {{ displayName() }}</h1></section>
         <aside class="absolute right-0 top-20 z-20 w-full max-w-sm rounded-bl-3xl bg-[#eed6db] p-5 text-[#1e1e1e] shadow-lg transition-transform sm:w-80" [class.translate-x-full]="!profileOpen()" aria-label="Perfil de usuario">
-          <div class="flex items-start gap-3 border-b border-[#a9002d]/15 pb-4"><span class="grid size-9 shrink-0 place-items-center rounded-full bg-white text-[#a9002d]">●</span><div><p class="text-xs font-bold leading-5">{{ displayName() }}</p><p class="text-[11px] text-[#5e5254]">Administrador</p></div></div><div class="mt-4 flex items-start gap-3"><span class="grid size-9 shrink-0 place-items-center rounded-full bg-white text-[#a9002d]">U</span><p class="text-xs font-semibold leading-4">Universidad Privada de Trujillo - UPRIT</p></div><button class="mt-20 flex h-11 w-full items-center justify-center rounded-full bg-white text-sm font-bold text-[#a9002d] shadow-sm" type="button">Cerrar sesión</button>
+          <div class="flex items-start gap-3 border-b border-[#a9002d]/15 pb-4"><span class="grid size-9 shrink-0 place-items-center rounded-full bg-white text-[#a9002d]">●</span><div><p class="text-xs font-bold leading-5">{{ displayName() }}</p><p class="text-[11px] text-[#5e5254]">Administrador</p></div></div><div class="mt-4 flex items-start gap-3"><span class="grid size-9 shrink-0 place-items-center rounded-full bg-white text-[#a9002d]">U</span><p class="text-xs font-semibold leading-4">Universidad Privada de Trujillo - UPRIT</p></div><button class="mt-20 flex h-11 w-full items-center justify-center rounded-full bg-white text-sm font-bold text-[#a9002d] shadow-sm" type="button" (click)="logout()">Cerrar sesión</button>
         </aside>
       </section>
     </main>`,
 })
 export class AdministratorHomeComponent {
   private readonly session = inject(AuthSessionService);
+  private readonly authApi = inject(AuthApiService);
+  private readonly router = inject(Router);
   protected readonly menuOpen = signal(false);
   protected readonly profileOpen = signal(true);
   protected readonly displayName = computed(() => this.session.user()?.displayName || 'Administrador');
@@ -35,4 +39,10 @@ export class AdministratorHomeComponent {
   ] as const;
   protected toggleMenu(): void { this.menuOpen.update((open) => !open); }
   protected toggleProfile(): void { this.profileOpen.update((open) => !open); }
+  protected async logout(): Promise<void> {
+    try { await this.authApi.logout(); } finally {
+      this.session.clear();
+      await this.router.navigateByUrl('/login');
+    }
+  }
 }

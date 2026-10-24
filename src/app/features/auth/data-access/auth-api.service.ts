@@ -81,6 +81,10 @@ export class AuthApiService {
     return this.toSession(response);
   }
 
+  async logout(): Promise<void> {
+    await firstValueFrom(this.http.post('/api/v1/auth/logout', {}, { withCredentials: true }));
+  }
+
   private toSession(response: unknown): AuthSessionSnapshot {
     if (!isLoginResponseDto(response)) throw new Error('La respuesta de autenticación no tiene un formato válido.');
     const roles = response.user.roles.filter((role): role is ApplicationRole => applicationRoles.includes(role as ApplicationRole));
