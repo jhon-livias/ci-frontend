@@ -5,7 +5,7 @@ import { AuthSessionService } from '../../../../core/auth/auth-session.service';
 import { AuthApiService } from '../../../auth/data-access/auth-api.service';
 
 @Component({
-  template: ` <main class="min-h-dvh bg-[#fcf9fa]">
+  template: ` <main class="min-h-dvh bg-[#fcf9fa]" (click)="closeProfile()">
     <section class="relative min-h-dvh overflow-hidden bg-[#fcf9fa]">
       <div class="relative z-30 flex h-18 items-center justify-between px-5 sm:h-20 sm:px-8">
         <button
@@ -45,7 +45,7 @@ import { AuthApiService } from '../../../auth/data-access/auth-api.service';
             class="grid size-8 place-items-center rounded-full hover:bg-white/15 sm:size-11"
             type="button"
             aria-label="Ver perfil"
-            (click)="toggleProfile()"
+            (click)="toggleProfile($event)"
           >
             <img class="h-7 w-auto sm:h-10" src="/assets/layout/profile.svg" alt="" />
           </button>
@@ -90,6 +90,7 @@ import { AuthApiService } from '../../../auth/data-access/auth-api.service';
         class="absolute right-0 top-20 z-20 flex min-h-[calc(100dvh-5rem)] w-full max-w-none flex-col rounded-bl-3xl bg-[#eed6db] px-10 py-9 text-[#1e1e1e] shadow-lg transition-transform sm:w-[470px] sm:px-10 sm:py-10"
         [class.translate-x-full]="!profileOpen()"
         aria-label="Perfil de usuario"
+        (click)="$event.stopPropagation()"
       >
         <div class="flex items-center gap-4">
           <img class="size-14 shrink-0 sm:size-[58px]" src="/assets/layout/menu-profile.svg" alt="" />
@@ -132,8 +133,12 @@ export class AdministratorHomeComponent {
   protected toggleMenu(): void {
     this.menuOpen.update((open) => !open);
   }
-  protected toggleProfile(): void {
+  protected toggleProfile(event: MouseEvent): void {
+    event.stopPropagation();
     this.profileOpen.update((open) => !open);
+  }
+  protected closeProfile(): void {
+    this.profileOpen.set(false);
   }
   protected async logout(): Promise<void> {
     try {
