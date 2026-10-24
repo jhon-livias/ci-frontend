@@ -5,7 +5,7 @@ import { AuthSessionService } from '../../../../core/auth/auth-session.service';
 import { AuthApiService } from '../../../auth/data-access/auth-api.service';
 
 @Component({
-  template: ` <main class="min-h-dvh bg-[#fcf9fa]" (click)="closeProfile()">
+  template: ` <main class="min-h-dvh bg-[#fcf9fa]" (click)="closePanels()">
     <section class="relative min-h-dvh overflow-hidden bg-[#fcf9fa]">
       <div class="relative z-30 flex h-18 items-center justify-between px-5 sm:h-20 sm:px-8">
         <button
@@ -39,6 +39,7 @@ import { AuthApiService } from '../../../auth/data-access/auth-api.service';
             class="grid size-8 place-items-center rounded-full hover:bg-white/15 sm:size-10"
             type="button"
             aria-label="Notificaciones"
+            (click)="toggleNotifications($event)"
           >
             <img class="h-5 w-auto sm:h-7" src="/assets/layout/notification.svg" alt="" /></button
           ><button
@@ -109,6 +110,16 @@ import { AuthApiService } from '../../../auth/data-access/auth-api.service';
           <img class="size-7" src="/assets/layout/logout.svg" alt="" /> Cerrar Sesión
         </button>
       </aside>
+      <aside
+        class="absolute right-0 top-20 z-20 flex min-h-[calc(100dvh-5rem)] w-full max-w-none flex-col rounded-bl-3xl bg-[#eed6db] px-10 py-9 text-[#1e1e1e] shadow-lg transition-transform sm:w-[470px] sm:px-10 sm:py-10"
+        [class.translate-x-full]="!notificationsOpen()"
+        aria-label="Notificaciones"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="flex items-center gap-4"><img class="size-14" src="/assets/layout/notification.svg" alt="" /><h2 class="font-[var(--font-geist)] text-2xl font-semibold">Notificaciones</h2></div>
+        <div class="mt-8 h-px bg-white/90"></div>
+        <p class="mt-8 text-center text-base text-[#5e5254]">No tienes notificaciones nuevas.</p>
+      </aside>
     </section>
   </main>`,
 })
@@ -118,6 +129,7 @@ export class AdministratorHomeComponent {
   private readonly router = inject(Router);
   protected readonly menuOpen = signal(false);
   protected readonly profileOpen = signal(false);
+  protected readonly notificationsOpen = signal(false);
   protected readonly displayName = computed(
     () => this.session.user()?.displayName || 'Administrador',
   );
@@ -135,10 +147,17 @@ export class AdministratorHomeComponent {
   }
   protected toggleProfile(event: MouseEvent): void {
     event.stopPropagation();
+    this.notificationsOpen.set(false);
     this.profileOpen.update((open) => !open);
   }
-  protected closeProfile(): void {
+  protected toggleNotifications(event: MouseEvent): void {
+    event.stopPropagation();
     this.profileOpen.set(false);
+    this.notificationsOpen.update((open) => !open);
+  }
+  protected closePanels(): void {
+    this.profileOpen.set(false);
+    this.notificationsOpen.set(false);
   }
   protected async logout(): Promise<void> {
     try {
