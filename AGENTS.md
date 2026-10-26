@@ -70,6 +70,11 @@ Un dominio no importa detalles internos de otro. Comparte únicamente UI, tipos 
 - Usa HTTPS y una base URL configurada por entorno. La API pública final conserva el prefijo `https://services.uprit.edu.pe/api/v1`; no cambies `/api/v1` por rutas no versionadas. No construyas URLs desde texto controlado por usuario ni permitas redirecciones abiertas.
 - Moodle, intranet, Nubefact y Niubiz son integraciones exclusivas del backend. La SPA consume únicamente contratos REST públicos versionados del Gateway.
 
+## Regla de cierre de notas
+
+- Cuando un grupo culmina, el docente asignado dispone de dos semanas para subir y guardar sus notas. Al terminar ese plazo, oculta la acción para entrar a registrar o editar notas del grupo culminado.
+- Usa el estado y la disponibilidad informados por el backend; no confíes en el reloj del navegador como control de seguridad. El backend debe rechazar las solicitudes fuera de plazo aunque se manipule la interfaz.
+
 ## Verificación antes de entregar
 
 - Ejecuta `npm run build`, `npm run test` y `npm audit`.

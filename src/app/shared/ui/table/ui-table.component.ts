@@ -32,6 +32,9 @@ export class UiTableComponent {
   readonly totalItems = input<number | null>(null);
   readonly pageSizeOptions = input<readonly number[]>([5, 10, 20]);
   readonly emptyMessage = input('No hay resultados para mostrar.');
+  readonly actions = input(false);
+  readonly edit = output<UiTableRow>();
+  readonly remove = output<UiTableRow>();
   readonly sortChange = output<UiTableSort>();
   readonly pageChange = output<UiTablePageChange>();
 
@@ -40,6 +43,7 @@ export class UiTableComponent {
   protected readonly sort = signal<UiTableSort | null>(null);
   protected readonly total = computed(() => this.totalItems() ?? this.rows().length);
   protected readonly pageCount = computed(() => Math.max(1, Math.ceil(this.total() / this.pageSize())));
+  protected readonly currentPage = computed(() => Math.min(this.page(), this.pageCount() - 1));
   protected readonly visibleRows = computed(() => {
     const sortedRows = [...this.rows()];
     const sort = this.sort();
@@ -48,11 +52,11 @@ export class UiTableComponent {
       sortedRows.sort((left, right) => this.compareCells(left[sort.key], right[sort.key], sort.direction));
     }
 
-    const start = this.page() * this.pageSize();
+    const start = this.currentPage() * this.pageSize();
     return sortedRows.slice(start, start + this.pageSize());
   });
-  protected readonly rangeStart = computed(() => (this.total() === 0 ? 0 : this.page() * this.pageSize() + 1));
-  protected readonly rangeEnd = computed(() => Math.min((this.page() + 1) * this.pageSize(), this.total()));
+  protected readonly rangeStart = computed(() => (this.total() === 0 ? 0 : this.currentPage() * this.pageSize() + 1));
+  protected readonly rangeEnd = computed(() => Math.min((this.currentPage() + 1) * this.pageSize(), this.total()));
 
   protected sortColumn(column: UiTableColumn): void {
     if (!column.sortable) {
@@ -73,7 +77,7 @@ export class UiTableComponent {
 
   protected changePage(page: number): void {
     const nextPage = Math.min(Math.max(page, 0), this.pageCount() - 1);
-    if (nextPage === this.page()) {
+    if (nextPage === this.currentPage()) {
       return;
     }
 

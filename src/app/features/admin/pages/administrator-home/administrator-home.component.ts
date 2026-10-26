@@ -1,10 +1,16 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthSessionService } from '../../../../core/auth/auth-session.service';
 import { AuthApiService } from '../../../auth/data-access/auth-api.service';
+import { AdminModulesComponent } from '../modules/admin-modules.component';
+import { AdminAccessPolicyComponent } from '../access-policy/admin-access-policy.component';
+import { AdminUsersComponent } from '../users/admin-users.component';
+import { AdminSitesComponent } from '../sites/admin-sites.component';
+import { AdminSiteCreateComponent } from '../sites/admin-site-create.component';
 
 @Component({
+  imports: [RouterLink, AdminModulesComponent, AdminAccessPolicyComponent, AdminUsersComponent, AdminSitesComponent, AdminSiteCreateComponent],
   template: ` <main class="min-h-dvh bg-[#fcf9fa]" (click)="closePanels()">
     <section class="relative min-h-dvh overflow-hidden bg-[#fcf9fa]">
       <div class="relative z-30 flex h-18 items-center justify-between px-5 sm:h-20 sm:px-8">
@@ -68,24 +74,44 @@ import { AuthApiService } from '../../../auth/data-access/auth-api.service';
       >
         <nav class="space-y-1 px-4">
           @for (item of navigation; track item.label) {
+            @if (item.route) {
             <a
-              href="#"
+              [routerLink]="item.route"
               class="flex min-h-11 items-center gap-3 rounded-lg px-4 text-sm font-semibold hover:bg-white/15"
-              [class.bg-white/20]="item.active"
+              [class.bg-white/20]="item.section === section"
+              [attr.aria-current]="item.section === section ? 'page' : null"
               (click)="menuOpen.set(false)"
               ><span class="grid size-4 place-items-center">{{ item.icon }}</span
               >{{ item.label }}</a
             >
+            } @else {
+              <span class="flex min-h-11 items-center gap-3 rounded-lg px-4 text-sm font-semibold text-white/70" aria-disabled="true">
+                <span class="grid size-4 place-items-center">{{ item.icon }}</span>{{ item.label }}
+                <span class="ml-auto text-xs font-normal">Próximamente</span>
+              </span>
+            }
           }
         </nav>
       </aside>
       <section class="px-6 py-8 sm:px-10 sm:py-10 lg:ml-60 lg:px-14 lg:py-12">
+        @if (section === 'modules') {
+          <app-admin-modules />
+        } @else if (section === 'site-create' || section === 'site-edit') {
+          <app-admin-site-create />
+        } @else if (section === 'sites') {
+          <app-admin-sites />
+        } @else if (section === 'users') {
+          <app-admin-users />
+        } @else if (section === 'roles' || section === 'permissions') {
+          <app-admin-access-policy [view]="section" />
+        } @else {
         <p class="text-xs text-[#7c8691]">Inicio</p>
         <h1
           class="mt-5 font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d] sm:text-3xl"
         >
           Bienvenido a UPRIT IDIOMAS, {{ displayName() }}
         </h1>
+        }
       </section>
       <aside
         class="absolute right-0 top-20 z-20 flex min-h-[calc(100dvh-5rem)] w-full max-w-none flex-col rounded-bl-3xl bg-[#eed6db] px-10 py-9 text-[#1e1e1e] shadow-lg transition-transform sm:w-[470px] sm:px-10 sm:py-10"
@@ -138,20 +164,24 @@ export class AdministratorHomeComponent {
   private readonly session = inject(AuthSessionService);
   private readonly authApi = inject(AuthApiService);
   private readonly router = inject(Router);
+  protected readonly section = this.resolveSection(inject(ActivatedRoute).snapshot.data['section']);
   protected readonly menuOpen = signal(false);
   protected readonly profileOpen = signal(false);
   protected readonly notificationsOpen = signal(false);
   protected readonly displayName = computed(
     () => this.session.user()?.displayName || 'Administrador',
   );
-  protected readonly navigation = [
-    { label: 'Inicio', icon: '⌂', active: true },
-    { label: 'Módulos', icon: '▦', active: false },
-    { label: 'Sedes', icon: '⌖', active: false },
-    { label: 'Permisos', icon: '▤', active: false },
-    { label: 'Roles', icon: '♟', active: false },
-    { label: 'Usuarios', icon: '▧', active: false },
-  ] as const;
+  protected readonly navigation: readonly { label: string; icon: string; route: string | null; section: string }[] = [
+    { label: 'Inicio', icon: '⌂', route: '/inicio', section: 'home' },
+    { label: 'Módulos', icon: '▦', route: '/administracion/modulos', section: 'modules' },
+    { label: 'Sedes', icon: '⌖', route: '/administracion/sedes', section: 'sites' },
+    { label: 'Permisos', icon: '▤', route: '/administracion/permisos', section: 'permissions' },
+    { label: 'Roles', icon: '♟', route: '/administracion/roles', section: 'roles' },
+    { label: 'Usuarios', icon: '▧', route: '/administracion/usuarios', section: 'users' },
+  ];
+  private resolveSection(value: unknown): 'home' | 'modules' | 'roles' | 'permissions' | 'users' | 'sites' | 'site-create' | 'site-edit' {
+    return value === 'modules' || value === 'roles' || value === 'permissions' || value === 'users' || value === 'sites' || value === 'site-create' || value === 'site-edit' ? value : 'home';
+  }
   protected toggleMenu(): void {
     this.menuOpen.update((open) => !open);
   }

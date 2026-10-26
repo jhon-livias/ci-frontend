@@ -7,6 +7,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { AuthSessionService } from './core/auth/auth-session.service';
 import { AdministratorHomeComponent } from './features/admin/pages/administrator-home/administrator-home.component';
 import { HomePageComponent } from './features/home/pages/home-page.component';
+import { ModuleCatalogService } from './features/admin/data-access/module-catalog.service';
 import { routes } from './app.routes';
 
 describe('application routes', () => {
@@ -28,6 +29,9 @@ describe('application routes', () => {
         provideHttpClient(),
         provideRouter(routes),
         { provide: AuthSessionService, useValue: session },
+        { provide: ModuleCatalogService, useValue: { list: async () => [
+          { code: 'roles', name: 'Roles y permisos', description: 'Roles', status: 'IN_PROGRESS' },
+        ] } },
       ],
     }).compileComponents();
   });
@@ -45,5 +49,23 @@ describe('application routes', () => {
     const component = await harness.navigateByUrl('/inicio', HomePageComponent);
 
     expect(component).toBeInstanceOf(HomePageComponent);
+  });
+
+  it('shows the module catalog to administrators', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/administracion/modulos', AdministratorHomeComponent);
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(harness.routeNativeElement?.textContent).toContain('Módulos del sistema');
+    expect(harness.routeNativeElement?.textContent).toContain('Roles y permisos');
+  });
+
+  it('does not allow a non-administrator to access the module catalog', async () => {
+    administrator.set(false);
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/administracion/modulos');
+
+    expect(harness.routeNativeElement?.textContent).not.toContain('Módulos del sistema');
   });
 });

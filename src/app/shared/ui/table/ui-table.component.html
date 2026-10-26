@@ -21,6 +21,7 @@
               }
             </th>
           }
+          @if (actions()) { <th scope="col">Acciones</th> }
         </tr>
       </thead>
       <tbody>
@@ -32,10 +33,16 @@
                 [class.table-card__cell--end]="column.align === 'end'"
               >{{ row[column.key] ?? '—' }}</td>
             }
+            @if (actions()) {
+              <td>
+                <button type="button" class="mr-3 text-[#92001f] underline" (click)="edit.emit(row)" [attr.aria-label]="'Editar ' + row['name']">Editar</button>
+                <button type="button" class="text-[#92001f] underline" (click)="remove.emit(row)" [attr.aria-label]="'Eliminar ' + row['name']">Eliminar</button>
+              </td>
+            }
           </tr>
         } @empty {
           <tr>
-            <td class="table-card__empty" [attr.colspan]="columns().length">{{ emptyMessage() }}</td>
+            <td class="table-card__empty" [attr.colspan]="columns().length + (actions() ? 1 : 0)">{{ emptyMessage() }}</td>
           </tr>
         }
       </tbody>
@@ -44,8 +51,8 @@
 
   <footer class="table-card__footer">
     <label class="table-card__page-size">
-      <span>Items por pagina:</span>
-      <select [value]="pageSize()" (change)="changePageSize($event)" aria-label="Items por pagina">
+      <span>Elementos por página:</span>
+      <select [value]="pageSize()" (change)="changePageSize($event)" aria-label="Elementos por página">
         @for (size of pageSizeOptions(); track size) {
           <option [value]="size">{{ size }}</option>
         }
@@ -53,10 +60,10 @@
     </label>
     <p class="table-card__range">{{ rangeStart() }}-{{ rangeEnd() }} de {{ total() }}</p>
     <div class="table-card__pagination" aria-label="Paginación">
-      <button type="button" aria-label="Página anterior" (click)="changePage(page() - 1)" [disabled]="page() === 0">
+      <button type="button" aria-label="Página anterior" (click)="changePage(currentPage() - 1)" [disabled]="currentPage() === 0">
         <span aria-hidden="true">‹</span>
       </button>
-      <button type="button" aria-label="Página siguiente" (click)="changePage(page() + 1)" [disabled]="page() >= pageCount() - 1">
+      <button type="button" aria-label="Página siguiente" (click)="changePage(currentPage() + 1)" [disabled]="currentPage() >= pageCount() - 1">
         <span aria-hidden="true">›</span>
       </button>
     </div>
