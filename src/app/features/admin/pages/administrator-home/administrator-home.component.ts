@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthSessionService } from '../../../../core/auth/auth-session.service';
 import { NotificationInboxService } from '../../data-access/notifications.service';
+import { AdminAcademicConfigComponent } from '../academic-config/admin-academic-config.component';
 import { AdminHistoryComponent } from '../history/admin-history.component';
 import { AdminModulesComponent } from '../modules/admin-modules.component';
 import { AdminPermissionsComponent } from '../permissions/admin-permissions.component';
@@ -12,10 +13,10 @@ import { AdminUsersComponent } from '../users/admin-users.component';
 import { AdminSitesComponent } from '../sites/admin-sites.component';
 import { AdminSiteCreateComponent } from '../sites/admin-site-create.component';
 
-type AdminNavIcon = 'home' | 'modules' | 'sites' | 'permissions' | 'user-types' | 'users' | 'history';
+type AdminNavIcon = 'home' | 'modules' | 'sites' | 'settings' | 'permissions' | 'user-types' | 'users' | 'history';
 
 @Component({
-  imports: [NgTemplateOutlet, RouterLink, AdminModulesComponent, AdminHistoryComponent, AdminPermissionsComponent, AdminUserTypesComponent, AdminUsersComponent, AdminSitesComponent, AdminSiteCreateComponent],
+  imports: [NgTemplateOutlet, RouterLink, AdminModulesComponent, AdminHistoryComponent, AdminAcademicConfigComponent, AdminPermissionsComponent, AdminUserTypesComponent, AdminUsersComponent, AdminSitesComponent, AdminSiteCreateComponent],
   templateUrl: './administrator-home.component.html',
 })
 export class AdministratorHomeComponent implements OnInit {
@@ -39,13 +40,14 @@ export class AdministratorHomeComponent implements OnInit {
     { label: 'Inicio', icon: 'home', route: '/inicio', section: 'home' },
     { label: 'Modulos', icon: 'modules', route: '/administracion/modulos', section: 'modules' },
     { label: 'Sedes', icon: 'sites', route: '/administracion/sedes', section: 'sites' },
+    { label: 'Configuración académica', icon: 'settings', route: '/administracion/configuracion', section: 'academic-config' },
     { label: 'Permisos', icon: 'permissions', route: '/administracion/permisos', section: 'permissions' },
     { label: 'Tipos de usuario', icon: 'user-types', route: '/administracion/roles', section: 'roles' },
     { label: 'Usuarios', icon: 'users', route: '/administracion/usuarios', section: 'users' },
     { label: 'Historial', icon: 'history', route: '/administracion/historial', section: 'history' },
   ];
-  private resolveSection(value: unknown): 'home' | 'modules' | 'history' | 'roles' | 'permissions' | 'users' | 'sites' | 'site-create' | 'site-edit' {
-    return value === 'modules' || value === 'history' || value === 'roles' || value === 'permissions' || value === 'users' || value === 'sites' || value === 'site-create' || value === 'site-edit' ? value : 'home';
+  private resolveSection(value: unknown): 'home' | 'modules' | 'history' | 'academic-config' | 'roles' | 'permissions' | 'users' | 'sites' | 'site-create' | 'site-edit' {
+    return value === 'modules' || value === 'history' || value === 'academic-config' || value === 'roles' || value === 'permissions' || value === 'users' || value === 'sites' || value === 'site-create' || value === 'site-edit' ? value : 'home';
   }
   protected isCurrent(itemSection: string): boolean {
     return itemSection === this.section || (itemSection === 'sites' && (this.section === 'site-create' || this.section === 'site-edit'));

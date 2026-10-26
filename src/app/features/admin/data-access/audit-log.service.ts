@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 export const AUDIT_ROLES = ['Estudiante', 'Docente', 'Asesora', 'Director', 'Administrador'] as const;
-export const AUDIT_MODULES = ['Sesión', 'Usuarios', 'Tipos de usuario', 'Permisos', 'Sedes'] as const;
+export const AUDIT_MODULES = ['Sesión', 'Usuarios', 'Tipos de usuario', 'Permisos', 'Sedes', 'Configuración académica'] as const;
 
 export interface AuditEvent {
   readonly id: string;
