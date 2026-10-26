@@ -51,41 +51,75 @@
       [class.-translate-x-full]="!menuOpen()"
       aria-label="Navegación administrativa"
     >
-      <nav class="space-y-1 px-4">
+      <nav class="space-y-1 px-3">
         @for (item of navigation; track item.label) {
           @if (item.route) {
             <a
               [routerLink]="item.route"
-              class="flex min-h-11 items-center gap-3 rounded-lg px-4 text-sm font-semibold hover:bg-white/15"
-              [class.bg-white/20]="item.section === section"
-              [attr.aria-current]="item.section === section ? 'page' : null"
+              class="flex min-h-12 items-center gap-3 rounded-lg px-4 text-sm font-semibold hover:bg-white/15"
+              [class.bg-[#c44760]]="isCurrent(item.section)"
+              [attr.aria-current]="isCurrent(item.section) ? 'page' : null"
               (click)="menuOpen.set(false)"
             >
-              <span class="grid size-4 place-items-center">{{ item.icon }}</span>{{ item.label }}
+              <ng-container [ngTemplateOutlet]="navIcon" [ngTemplateOutletContext]="{ $implicit: item.icon }" />
+              {{ item.label }}
             </a>
           } @else {
-            <span
-              class="flex min-h-11 items-center gap-3 rounded-lg px-4 text-sm font-semibold text-white/70"
-              aria-disabled="true"
-            >
-              <span class="grid size-4 place-items-center">{{ item.icon }}</span>{{ item.label }}
-              <span class="ml-auto text-xs font-normal">Próximamente</span>
+            <span class="flex min-h-12 items-center gap-3 rounded-lg px-4 text-sm font-semibold" aria-disabled="true">
+              <ng-container [ngTemplateOutlet]="navIcon" [ngTemplateOutletContext]="{ $implicit: item.icon }" />
+              {{ item.label }}
             </span>
           }
         }
       </nav>
+      <ng-template #navIcon let-icon>
+        <svg aria-hidden="true" class="size-5 shrink-0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24">
+          @switch (icon) {
+            @case ('home') {
+              <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z" />
+            }
+            @case ('modules') {
+              <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />
+            }
+            @case ('sites') {
+              <path d="M4 20V7l8-3 8 3v13" />
+              <path d="M9 20v-6h6v6M9 9h.01M15 9h.01M9 13h.01M15 13h.01" />
+            }
+            @case ('permissions') {
+              <path d="M8 3.5h8a2 2 0 0 1 2 2V21H6V5.5a2 2 0 0 1 2-2z" />
+              <path d="M9 8h6M9 12h6M9 16h4" />
+            }
+            @case ('user-types') {
+              <path d="M4 7h16v12H4z" />
+              <path d="M8 11h5M8 15h8" />
+            }
+            @case ('users') {
+              <path d="M12 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" />
+              <path d="M5 20c1.2-3 3.4-4.5 7-4.5s5.8 1.5 7 4.5" />
+            }
+            @default {
+              <path d="M7 3.5h8l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z" />
+              <path d="M15 3.5V8h5M8 12h8M8 16h6" />
+            }
+          }
+        </svg>
+      </ng-template>
     </aside>
     <section class="px-6 py-8 sm:px-10 sm:py-10 lg:ml-60 lg:px-14 lg:py-12">
       @if (section === 'modules') {
         <app-admin-modules />
+      } @else if (section === 'history') {
+        <app-admin-history />
       } @else if (section === 'site-create' || section === 'site-edit') {
         <app-admin-site-create />
       } @else if (section === 'sites') {
         <app-admin-sites />
       } @else if (section === 'users') {
         <app-admin-users />
-      } @else if (section === 'roles' || section === 'permissions') {
-        <app-admin-access-policy [view]="section" />
+      } @else if (section === 'permissions') {
+        <app-admin-permissions />
+      } @else if (section === 'roles') {
+        <app-admin-user-types />
       } @else {
         <p class="text-xs text-[#7c8691]">Inicio</p>
         <h1

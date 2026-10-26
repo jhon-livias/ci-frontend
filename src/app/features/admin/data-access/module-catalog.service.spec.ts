@@ -15,26 +15,27 @@ describe('ModuleCatalogService', () => {
   });
   afterEach(() => http.verify());
 
-  it('loads the catalog from the gateway', async () => {
-    const result = service.list();
-    http.expectOne('/api/v1/auth/admin/modules').flush({ modules: [
-      { code: 'users', name: 'Usuarios', description: 'Cuentas', status: 'IN_PROGRESS' },
-    ] });
-    expect((await result)[0].name).toBe('Usuarios');
+  it('loads the directory page from the gateway', async () => {
+    const result = service.list({ page: 1, pageSize: 5 });
+    const request = http.expectOne((candidate) => candidate.url === '/api/v1/auth/admin/modules');
+    request.flush({
+      page: 1,
+      pageSize: 5,
+      total: 1,
+      modules: [{ code: 'TEACHER', name: 'Docente', users: 3, active: 2, inactive: 1 }],
+    });
+    expect((await result).modules[0]?.name).toBe('Docente');
+    expect(request.request.params.get('page')).toBe('1');
   });
 
-  it('rejects invalid statuses and malformed data', async () => {
-    const result = service.list();
-    http.expectOne('/api/v1/auth/admin/modules').flush({ modules: [
-      { code: 'users', name: 'Usuarios', description: 'Cuentas', status: 'INVALID' },
-    ] });
-    await expect(result).rejects.toThrow();
-  });
-
-  it('rejects duplicate module codes', async () => {
-    const result = service.list();
-    const module = { code: 'users', name: 'Usuarios', description: 'Cuentas', status: 'PLANNED' };
-    http.expectOne('/api/v1/auth/admin/modules').flush({ modules: [module, module] });
+  it('rejects a count that does not add up', async () => {
+    const result = service.list({ page: 1, pageSize: 5 });
+    http.expectOne((candidate) => candidate.url === '/api/v1/auth/admin/modules').flush({
+      page: 1,
+      pageSize: 5,
+      total: 1,
+      modules: [{ code: 'TEACHER', name: 'Docente', users: 9, active: 2, inactive: 1 }],
+    });
     await expect(result).rejects.toThrow();
   });
 });

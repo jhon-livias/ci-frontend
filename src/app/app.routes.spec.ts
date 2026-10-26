@@ -29,9 +29,17 @@ describe('application routes', () => {
         provideHttpClient(),
         provideRouter(routes),
         { provide: AuthSessionService, useValue: session },
-        { provide: ModuleCatalogService, useValue: { list: async () => [
-          { code: 'roles', name: 'Roles y permisos', description: 'Roles', status: 'IN_PROGRESS' },
-        ] } },
+        {
+          provide: ModuleCatalogService,
+          useValue: {
+            list: async () => ({
+              page: 1,
+              pageSize: 5,
+              total: 1,
+              modules: [{ code: 'ADMINISTRATOR', name: 'Roles y permisos', users: 1, active: 1, inactive: 0 }],
+            }),
+          },
+        },
       ],
     }).compileComponents();
   });
@@ -57,7 +65,7 @@ describe('application routes', () => {
     await harness.fixture.whenStable();
     harness.detectChanges();
 
-    expect(harness.routeNativeElement?.textContent).toContain('Módulos del sistema');
+    expect(harness.routeNativeElement?.textContent).toContain('MÓDULOS');
     expect(harness.routeNativeElement?.textContent).toContain('Roles y permisos');
   });
 

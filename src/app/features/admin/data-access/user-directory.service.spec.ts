@@ -4,6 +4,8 @@ import { TestBed } from '@angular/core/testing';
 
 import { UserDirectoryService } from './user-directory.service';
 
+const userId = '6f1c2a40-7b2e-4c1a-9d11-0a1b2c3d6a01';
+
 describe('UserDirectoryService', () => {
   let service: UserDirectoryService;
   let http: HttpTestingController;
@@ -17,16 +19,32 @@ describe('UserDirectoryService', () => {
   afterEach(() => http.verify());
 
   it('loads a page from the API', async () => {
-    const result = service.list(1);
-    http.expectOne('/api/v1/auth/admin/users?page=1').flush({ page: 1, hasMore: false, users: [
-      { id: '1', username: 'admin', displayName: 'Ada Lima', status: 'ACTIVE', roles: ['ADMINISTRATOR'] },
-    ] });
-    expect((await result).users[0].username).toBe('admin');
+    const result = service.list({ page: 1, pageSize: 5, search: 'Carlos' });
+    const request = http.expectOne((candidate) => candidate.url === '/api/v1/auth/admin/users');
+    expect(request.request.params.get('search')).toBe('Carlos');
+    expect(request.request.params.get('pageSize')).toBe('5');
+    request.flush({
+      page: 1,
+      pageSize: 5,
+      total: 1,
+      types: [{ code: 'STUDENT', name: 'Estudiante' }],
+      statuses: [{ code: 'ACTIVE', name: 'Activo' }],
+      users: [{
+        id: userId,
+        documentNumber: '123456',
+        firstName: 'Carlos',
+        paternalLastName: 'Haro',
+        maternalLastName: 'Polo',
+        typeName: 'Estudiante',
+        roles: ['STUDENT'],
+      }],
+    });
+    expect((await result).users[0].documentNumber).toBe('123456');
   });
 
   it('rejects malformed user data', async () => {
-    const result = service.list(1);
-    http.expectOne('/api/v1/auth/admin/users?page=1').flush({ page: 1, hasMore: false, users: [{ username: 1 }] });
+    const result = service.list({ page: 1, pageSize: 5 });
+    http.expectOne((candidate) => candidate.url === '/api/v1/auth/admin/users').flush({ page: 1, pageSize: 5, total: 0, types: [], statuses: [], users: [{ documentNumber: 1 }] });
     await expect(result).rejects.toThrow();
   });
 });

@@ -23,3 +23,6 @@
     />
   </div>
 }
+@if (confirmation(); as dialog) {
+  <ui-confirm [message]="dialog.message" [details]="dialog.details" (confirmed)="acceptConfirmation()" (cancelled)="cancelConfirmation()" />
+}

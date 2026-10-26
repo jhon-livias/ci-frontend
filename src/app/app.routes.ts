@@ -6,6 +6,7 @@ import {
   administratorMatchGuard,
   anonymousGuard,
   authenticatedGuard,
+  passwordChangeGuard,
 } from './core/auth/session.guard';
 
 const redirectToLanding = (): string =>
@@ -24,6 +25,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/auth/pages/login/login-page.component').then(
         (module) => module.LoginPageComponent,
+      ),
+  },
+  {
+    path: 'cambiar-contrasena',
+    title: 'Cambiar contraseña | Centro de Idiomas UPRIT',
+    canActivate: [passwordChangeGuard],
+    loadComponent: () =>
+      import('./features/auth/pages/change-password/change-password-page.component').then(
+        (module) => module.ChangePasswordPageComponent,
       ),
   },
   {
@@ -85,6 +95,16 @@ export const routes: Routes = [
     canActivate: [authenticatedGuard, administratorGuard],
     data: { section: 'sites' },
     loadComponent: () => import('./features/admin/pages/administrator-home/administrator-home.component').then((module) => module.AdministratorHomeComponent),
+  },
+  {
+    path: 'administracion/historial',
+    title: 'Historial | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, administratorGuard],
+    data: { section: 'history' },
+    loadComponent: () =>
+      import('./features/admin/pages/administrator-home/administrator-home.component').then(
+        (module) => module.AdministratorHomeComponent,
+      ),
   },
   {
     path: 'administracion/modulos',

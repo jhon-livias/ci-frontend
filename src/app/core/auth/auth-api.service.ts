@@ -10,6 +10,7 @@ interface LoginResponseDto {
     readonly id: string;
     readonly username: string;
     readonly roles: readonly string[];
+    readonly mustChangePassword?: boolean;
     readonly profile: { readonly firstName: string; readonly paternalLastName: string } | null;
   };
 }
@@ -68,6 +69,10 @@ export class AuthApiService {
     await firstValueFrom(this.http.post('/api/v1/auth/logout', {}, { withCredentials: true }));
   }
 
+  async changePassword(password: string): Promise<void> {
+    await firstValueFrom(this.http.post('/api/v1/auth/password', { password }, { withCredentials: true }));
+  }
+
   private toSession(response: unknown): AuthSessionSnapshot {
     if (!isLoginResponseDto(response)) throw new Error('La respuesta de autenticación no tiene un formato válido.');
     const roles = response.user.roles.filter((role): role is ApplicationRole => applicationRoles.includes(role as ApplicationRole));
@@ -79,6 +84,7 @@ export class AuthApiService {
         id: response.user.id,
         username: response.user.username,
         roles,
+        mustChangePassword: response.user.mustChangePassword === true,
         displayName: profile ? `${profile.firstName} ${profile.paternalLastName}` : null,
       },
     };

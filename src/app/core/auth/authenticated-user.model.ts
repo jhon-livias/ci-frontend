@@ -4,6 +4,7 @@ export interface AuthenticatedUser {
   readonly id: string;
   readonly username: string;
   readonly roles: readonly ApplicationRole[];
+  readonly mustChangePassword: boolean;
   readonly displayName: string | null;
 }
 

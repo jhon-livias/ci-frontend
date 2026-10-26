@@ -32,10 +32,20 @@ export class AuthSessionService {
     return this.user()?.roles.includes(role) ?? false;
   }
 
+  passwordChanged(): void {
+    const current = this.user();
+    if (!current) return;
+    this.user.set({ ...current, mustChangePassword: false });
+  }
+
   /** Ruta de entrada única, resuelta a partir de la sesión ya validada. */
   defaultRoute(): string {
     if (!this.isAuthenticated()) {
       return '/login';
+    }
+
+    if (this.user()?.mustChangePassword) {
+      return '/cambiar-contrasena';
     }
 
     return '/inicio';
