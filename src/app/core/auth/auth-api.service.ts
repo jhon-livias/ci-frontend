@@ -2,8 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-import { AuthenticatedUser, type ApplicationRole } from '../models/authenticated-user.model';
-import type { LoginCredentials } from '../models/login-credentials.model';
+import { AuthenticatedUser, type ApplicationRole, type LoginRequest } from './authenticated-user.model';
 
 interface LoginResponseDto {
   readonly csrfToken: string;
@@ -48,27 +47,11 @@ const isLoginResponseDto = (value: unknown): value is LoginResponseDto => {
 export class AuthApiService {
   private readonly http = inject(HttpClient);
 
-  async login(credentials: LoginCredentials): Promise<AuthSessionSnapshot> {
+  async login(credentials: LoginRequest): Promise<AuthSessionSnapshot> {
     const response = await firstValueFrom(
       this.http.post<unknown>('/api/v1/auth/login', credentials, { withCredentials: true }),
     );
-
-    if (!isLoginResponseDto(response)) {
-      throw new Error('La respuesta de autenticación no tiene un formato válido.');
-    }
-
-    const roles = response.user.roles.filter((role): role is ApplicationRole => applicationRoles.includes(role as ApplicationRole));
-    if (roles.length !== response.user.roles.length) {
-      throw new Error('La respuesta de autenticación contiene un rol no reconocido.');
-    }
-
-    const profile = response.user.profile;
-    return { csrfToken: response.csrfToken, user: {
-      id: response.user.id,
-      username: response.user.username,
-      roles,
-      displayName: profile ? `${profile.firstName} ${profile.paternalLastName}` : null,
-    }};
+    return this.toSession(response);
   }
 
   async session(): Promise<AuthSessionSnapshot> {
@@ -90,9 +73,14 @@ export class AuthApiService {
     const roles = response.user.roles.filter((role): role is ApplicationRole => applicationRoles.includes(role as ApplicationRole));
     if (roles.length !== response.user.roles.length) throw new Error('La respuesta de autenticación contiene un rol no reconocido.');
     const profile = response.user.profile;
-    return { csrfToken: response.csrfToken, user: {
-      id: response.user.id, username: response.user.username, roles,
-      displayName: profile ? `${profile.firstName} ${profile.paternalLastName}` : null,
-    }};
+    return {
+      csrfToken: response.csrfToken,
+      user: {
+        id: response.user.id,
+        username: response.user.username,
+        roles,
+        displayName: profile ? `${profile.firstName} ${profile.paternalLastName}` : null,
+      },
+    };
   }
 }

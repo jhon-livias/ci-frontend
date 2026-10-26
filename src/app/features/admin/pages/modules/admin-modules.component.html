@@ -1,0 +1,39 @@
+<header class="max-w-3xl">
+  <p class="text-xs font-medium text-[#7c8691]">Administración / Módulos</p>
+  <h1 class="mt-5 font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d] sm:text-3xl">
+    Módulos del sistema
+  </h1>
+  <p class="mt-3 leading-relaxed text-[#5e5254]">
+    Consulta las áreas funcionales del Centro de Idiomas y su estado de desarrollo.
+  </p>
+</header>
+
+@if (loading()) {
+  <p class="mt-8 text-[#5e5254]" role="status">Cargando módulos…</p>
+} @else if (error()) {
+  <p class="mt-8 rounded-lg bg-[#fff0f1] p-4 text-[#92001f]" role="alert">
+    No se pudo cargar el catálogo. Comprueba la conexión y vuelve a intentarlo.
+  </p>
+  <div class="mt-4"><ui-button type="button" (click)="load()">Reintentar</ui-button></div>
+} @else {
+  <div class="mt-8 grid gap-4 sm:grid-cols-2">
+    <ui-field
+      id="module-search"
+      label="Buscar módulo"
+      type="search"
+      placeholder="Nombre o descripción"
+      [(value)]="search"
+    />
+    <ui-select
+      id="module-status"
+      label="Estado"
+      placeholder="Todos los estados"
+      [options]="statusOptions"
+      [(value)]="statusFilter"
+    />
+  </div>
+  <p class="mt-5 text-sm text-[#5e5254]" role="status">{{ filteredModules().length }} de {{ modules().length }} módulos</p>
+  <div class="mt-5">
+    <ui-table [columns]="columns" [rows]="tableRows()" emptyMessage="No se encontraron módulos con esos filtros." />
+  </div>
+}

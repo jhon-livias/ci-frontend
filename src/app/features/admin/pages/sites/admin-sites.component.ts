@@ -8,19 +8,7 @@ import { UiTableComponent, type UiTableColumn, type UiTableRow } from '../../../
 @Component({
   selector: 'app-admin-sites',
   imports: [UiButtonComponent, UiFieldComponent, UiTableComponent],
-  template: `
-    <p class="text-xs text-[#7c8691]">Inicio / Sedes</p>
-    <div class="mt-5 flex flex-wrap items-center justify-between gap-4">
-      <h1 class="font-[var(--font-heading)] text-2xl font-semibold text-[#a9002d]">Sedes</h1>
-      <ui-button (click)="startCreate()">Agregar sede</ui-button>
-    </div>
-    @if (message()) { <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p> }
-    @if (loading()) { <p class="mt-8" role="status">Cargando sedes…</p> }
-    @else {
-      <div class="mt-6 max-w-md"><ui-field id="site-search" label="Buscar sede" type="search" [(value)]="search" /></div>
-      <div class="mt-6"><ui-table [columns]="columns" [rows]="rows()" [actions]="true" (edit)="startEdit($event)" (remove)="remove($event)" emptyMessage="No se encontraron sedes." /></div>
-    }
-  `,
+  templateUrl: './admin-sites.component.html',
 })
 export class AdminSitesComponent implements OnInit {
   private readonly api = inject(SitesService);

@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 
-import { AuthApiService, type AuthSessionSnapshot } from '../../features/auth/data-access/auth-api.service';
-import type { ApplicationRole, AuthenticatedUser } from '../../features/auth/models/authenticated-user.model';
+import { AuthApiService, type AuthSessionSnapshot } from './auth-api.service';
+import type { ApplicationRole, AuthenticatedUser } from './authenticated-user.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthSessionService {
@@ -18,6 +18,14 @@ export class AuthSessionService {
   clear(): void {
     this.user.set(null);
     this.csrfToken.set(null);
+  }
+
+  async logout(): Promise<void> {
+    try {
+      await this.authApi.logout();
+    } finally {
+      this.clear();
+    }
   }
 
   hasRole(role: ApplicationRole): boolean {

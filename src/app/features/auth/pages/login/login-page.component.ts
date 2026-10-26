@@ -1,9 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormField, FormRoot, form, minLength, required } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
+import { AuthApiService } from '../../../../core/auth/auth-api.service';
 import { AuthSessionService } from '../../../../core/auth/auth-session.service';
-import { AuthApiService } from '../../data-access/auth-api.service';
-import { LoginCredentials } from '../../models/login-credentials.model';
+import type { LoginCredentials } from '../../models/login-credentials.model';
 import { UiButtonComponent } from '../../../../shared/ui/button/ui-button.component';
 import { UiFieldComponent } from '../../../../shared/ui/field/ui-field.component';
 import { AuthLayoutComponent } from '../../../../layouts/auth-layout/auth-layout.component';

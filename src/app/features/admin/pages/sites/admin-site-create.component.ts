@@ -9,45 +9,7 @@ import { UiSelectComponent, type UiSelectOption } from '../../../../shared/ui/se
 @Component({
   selector: 'app-admin-site-create',
   imports: [FormField, FormRoot, RouterLink, UiButtonComponent, UiFieldComponent, UiSelectComponent],
-  template: `
-    <p class="text-xs text-[#7c8691]">Inicio / <a routerLink="/administracion/sedes" class="hover:underline">Sedes</a> / {{ editing() ? 'Editar sede' : 'Agregar sede' }}</p>
-    <div class="mt-5 flex flex-wrap items-center justify-between gap-4">
-      <h1 class="font-[var(--font-heading)] text-2xl font-semibold text-[#a9002d]">{{ editing() ? 'Editar sede' : 'Agregar sede' }}</h1>
-      <a routerLink="/administracion/sedes" class="text-sm font-semibold text-[#92001f] underline-offset-4 hover:underline focus-visible:outline-2">Volver a sedes</a>
-    </div>
-    <form [formRoot]="siteForm" (submit)="submit()" class="mt-6 space-y-6 rounded-2xl bg-white p-6 shadow-sm sm:p-8" novalidate>
-      <div class="grid gap-4 sm:grid-cols-[1fr_2fr]">
-        <ui-field id="new-site-code" label="Código" [formField]="siteForm.code" hint="Mayúsculas, números, guion o guion bajo." />
-        <ui-field id="new-site-name" label="Nombre" [formField]="siteForm.name" />
-      </div>
-      <fieldset>
-        <legend class="mb-3 text-sm font-semibold text-[#5e5254]">Ubicación</legend>
-        <div class="grid gap-4 sm:grid-cols-3">
-          <ui-select id="site-department" label="Departamento" placeholder="Selecciona un departamento" [options]="departmentOptions()" [value]="departmentCode()" (valueChange)="departmentCode.set($event); changeDepartment()" />
-          <ui-select id="site-province" label="Provincia" placeholder="Selecciona una provincia" [options]="provinceOptions()" [disabled]="!departmentCode()" [value]="provinceCode()" (valueChange)="provinceCode.set($event); changeProvince()" />
-          <ui-select id="site-district" label="Distrito" placeholder="Selecciona un distrito" [options]="districtOptions()" [disabled]="!provinceCode()" [value]="districtCode()" (valueChange)="districtCode.set($event)" />
-        </div>
-      </fieldset>
-      <div class="grid gap-4 sm:grid-cols-[2fr_1fr]">
-        <ui-field id="site-street" label="Calle" [formField]="siteForm.street" />
-        <ui-field id="site-postal" label="Código postal" [formField]="siteForm.postalCode" placeholder="5 dígitos" />
-      </div>
-      @if (editing()) {
-        <ui-select id="site-state" label="Estado" [options]="stateOptions" [value]="active()" (valueChange)="active.set($event)" />
-      }
-      <div class="grid gap-4 sm:grid-cols-[1fr_2fr]">
-        <ui-field id="site-phone" label="Teléfono" type="tel" [formField]="siteForm.phone" />
-        <ui-field id="site-email" label="Correo electrónico" type="email" [formField]="siteForm.email" />
-      </div>
-      <div class="grid gap-4 sm:grid-cols-[2fr_1fr]">
-        <ui-field id="site-contact" label="Responsable" [formField]="siteForm.contactName" />
-        <ui-field id="site-contact-phone" label="Teléfono del responsable" type="tel" [formField]="siteForm.contactPhone" />
-      </div>
-      <p class="text-sm text-[#5e5254]">Solo el código y el nombre son obligatorios. {{ editing() ? 'Los demás campos son opcionales.' : 'La sede se creará activa.' }}</p>
-      @if (notice()) { <p role="alert" class="text-sm text-[#92001f]">{{ notice() }}</p> }
-      <div class="flex justify-end"><ui-button type="submit" [disabled]="saving() || loading()">{{ saving() ? 'Guardando…' : (editing() ? 'Guardar cambios' : 'Guardar') }}</ui-button></div>
-    </form>
-  `,
+  templateUrl: './admin-site-create.component.html',
 })
 export class AdminSiteCreateComponent implements OnInit {
   private readonly api = inject(SitesService);

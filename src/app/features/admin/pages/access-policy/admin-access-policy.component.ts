@@ -7,46 +7,7 @@ import { UiCardComponent } from '../../../../shared/ui/card/ui-card.component';
 @Component({
   selector: 'app-admin-access-policy',
   imports: [UiBadgeComponent, UiCardComponent],
-  template: `
-    <header class="max-w-3xl">
-      <p class="text-xs font-medium text-[#7c8691]">Administración / {{ view() === 'roles' ? 'Roles' : 'Permisos' }}</p>
-      <h1 class="mt-5 font-[var(--font-heading)] text-2xl font-semibold text-[#a9002d] sm:text-3xl">
-        {{ view() === 'roles' ? 'Roles del sistema' : 'Permisos del sistema' }}
-      </h1>
-      <p class="mt-3 leading-relaxed text-[#5e5254]">
-        {{ view() === 'roles' ? 'Los cinco roles son fijos; sus capacidades se revisan antes de incorporarse.' : 'Solo se muestran permisos implementados y protegidos en el servidor.' }}
-      </p>
-    </header>
-
-    @if (loading()) {
-      <p class="mt-8 text-[#5e5254]" role="status">Cargando información de acceso…</p>
-    } @else if (error()) {
-      <p class="mt-8 rounded-lg bg-[#fff0f1] p-4 text-[#92001f]" role="alert">No se pudo consultar la política de acceso. Inténtalo de nuevo más tarde.</p>
-    } @else if (policy(); as catalog) {
-      @if (view() === 'roles') {
-        <div class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          @for (role of catalog.roles; track role.code) {
-            <ui-card [heading]="role.name">
-              <p class="text-sm leading-relaxed text-[#5e5254]">{{ role.description }}</p>
-              <p class="mt-4 text-xs text-[#5e5254]">Permisos implementados en esta política: {{ role.permissions.length }}</p>
-            </ui-card>
-          }
-        </div>
-      } @else {
-        <div class="mt-8 grid gap-4 md:grid-cols-2">
-          @for (permission of catalog.permissions; track permission.code) {
-            <ui-card [heading]="permission.description">
-              <ui-badge tone="primary">{{ permission.code }}</ui-badge>
-              <p class="mt-4 text-sm text-[#5e5254]">Autorizado para: {{ roleNames(catalog, permission.code) }}</p>
-            </ui-card>
-          }
-        </div>
-      }
-      <p class="mt-6 max-w-3xl text-sm leading-relaxed text-[#5e5254]">
-        Este catálogo es de solo lectura. Las funciones académicas y los permisos restantes se incorporarán conforme se implementen y verifiquen.
-      </p>
-    }
-  `,
+  templateUrl: './admin-access-policy.component.html',
 })
 export class AdminAccessPolicyComponent implements OnInit {
   readonly view = input.required<'roles' | 'permissions'>();
