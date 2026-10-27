@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormField, FormRoot, form, minLength, required } from '@angular/forms/signals';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthApiService } from '../../../../core/auth/auth-api.service';
 import { AuthSessionService } from '../../../../core/auth/auth-session.service';
 import type { LoginCredentials } from '../../models/login-credentials.model';
@@ -27,6 +27,7 @@ export class LoginPageComponent {
   private readonly session = inject(AuthSessionService);
   private readonly router = inject(Router);
   private readonly recaptcha = inject(RecaptchaService);
+  private readonly route = inject(ActivatedRoute);
   protected readonly credentials = signal<LoginCredentials>({ username: '', password: '' });
   protected readonly loginForm = form(this.credentials, (path) => {
     required(path.username, { message: 'Ingresa tu usuario institucional.' });
@@ -34,7 +35,9 @@ export class LoginPageComponent {
     minLength(path.password, 8, { message: 'La contraseña debe tener al menos 8 caracteres.' });
   });
 
-  protected readonly notice = signal<{ text: string; tone: AlertTone } | null>(null);
+  protected readonly notice = signal<{ text: string; tone: AlertTone } | null>(
+    googleLoginNotice(this.route.snapshot.queryParamMap.get('google')),
+  );
   protected readonly isSubmitting = signal(false);
 
   protected async submit(): Promise<void> {
@@ -62,10 +65,27 @@ export class LoginPageComponent {
     }
   }
 
-  protected notifyUnavailable(feature: 'Google'): void {
-    this.notice.set({
-      text: `La opción de ${feature} se habilitará al integrar el proveedor de identidad institucional.`,
-      tone: 'info',
-    });
+  protected continueWithGoogle(): void {
+    window.location.assign('/api/v1/auth/google');
   }
 }
+
+const googleLoginNotice = (reason: string | null): { text: string; tone: AlertTone } | null => {
+  switch (reason) {
+    case 'denied':
+      return { text: 'Cancelaste el ingreso con Google.', tone: 'info' };
+    case 'unverified':
+      return { text: 'Google no confirmó un correo institucional.', tone: 'error' };
+    case 'unknown':
+      return {
+        text: 'No hay una cuenta registrada con ese correo. Pide a administración que te cree el usuario.',
+        tone: 'warning',
+      };
+    case 'unconfigured':
+      return { text: 'El ingreso con Google todavía no está configurado.', tone: 'info' };
+    case 'failed':
+      return { text: 'No se pudo completar el ingreso con Google.', tone: 'error' };
+    default:
+      return null;
+  }
+};
