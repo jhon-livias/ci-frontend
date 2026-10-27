@@ -24,7 +24,7 @@ const isNotification = (value: unknown): value is InboxNotification => {
 export class NotificationInboxService {
   private readonly http = inject(HttpClient);
   private readonly items = signal<readonly InboxNotification[]>([]);
-  private socket: WebSocket | undefined;
+  private stream: AbortController | undefined;
   readonly notifications = this.items.asReadonly();
 
   async refresh(): Promise<void> {
@@ -38,21 +38,50 @@ export class NotificationInboxService {
   }
 
   connect(): void {
-    if (this.socket && this.socket.readyState <= WebSocket.OPEN) return;
-    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const socket = new WebSocket(`${protocol}//${location.host}/api/v1/auth/notifications/stream`);
-    socket.addEventListener('message', (event) => {
-      const parsed = this.parseMessage(event.data);
-      if (!parsed) return;
-      this.items.update((current) => current.some((item) => item.id === parsed.id) ? current : [parsed, ...current].slice(0, 20));
-    });
-    this.socket = socket;
+    if (this.stream) return;
+    const stream = new AbortController();
+    this.stream = stream;
+    void this.readStream(stream.signal);
   }
 
   disconnect(): void {
-    this.socket?.close();
-    this.socket = undefined;
+    this.stream?.abort();
+    this.stream = undefined;
     this.items.set([]);
+  }
+
+  private async readStream(signal: AbortSignal): Promise<void> {
+    try {
+      const response = await fetch('/api/v1/auth/notifications/events', {
+        credentials: 'include',
+        signal,
+        headers: { Accept: 'text/event-stream' },
+      });
+      if (!response.ok || !response.body) return;
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      while (!signal.aborted) {
+        const chunk = await reader.read();
+        if (chunk.done) return;
+        buffer += decoder.decode(chunk.value, { stream: true });
+        const frames = buffer.split('\n\n');
+        buffer = frames.pop() ?? '';
+        for (const frame of frames) this.consumeFrame(frame);
+      }
+    } catch {
+      // La vista se cerró o el canal se cortó. La siguiente visita vuelve a conectarse.
+    }
+  }
+
+  private consumeFrame(frame: string): void {
+    const line = frame.split('\n').find((item) => item.startsWith('data: '));
+    if (!line) return;
+    const parsed = this.parseMessage(line.slice('data: '.length));
+    if (!parsed) return;
+    this.items.update((current) =>
+      current.some((item) => item.id === parsed.id) ? current : [parsed, ...current].slice(0, 20),
+    );
   }
 
   private parseMessage(data: unknown): InboxNotification | undefined {
