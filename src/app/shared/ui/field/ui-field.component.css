@@ -32,6 +32,10 @@
   padding-right: 5.5rem;
 }
 
+.field__control--invalid {
+  border-color: var(--color-brand-primary);
+}
+
 .field__toggle {
   position: absolute;
   top: 50%;

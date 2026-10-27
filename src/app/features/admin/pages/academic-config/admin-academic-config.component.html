@@ -1,27 +1,32 @@
-<h1 class="font-[var(--font-heading)] text-[1.65rem] font-bold tracking-wide text-[#a9002d]">CONFIGURACIÓN ACADÉMICA</h1>
-<p class="mt-2 text-sm text-[#7c8691]">Catálogos y reglas que usan los grupos y las matrículas.</p>
+<ui-page-header [items]="crumbs" title="Configuración académica" description="Catálogos y reglas que usan los grupos y las matrículas." />
 @if (message()) {
   <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
 }
+<ui-filter-bar>
+  <div class="w-full min-w-56 max-w-md flex-1">
+    <ui-field id="academic-search" label="Buscar" type="search" [(value)]="query" />
+  </div>
+  <div class="w-full min-w-44 max-w-xs flex-1">
+    <ui-select id="academic-catalog" label="Catálogo" [options]="catalogFilterOptions()" [searchable]="false" [(value)]="catalogFilter" />
+  </div>
+</ui-filter-bar>
 
 <section class="mt-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)] sm:p-8" aria-label="Catálogos académicos">
   <h2 class="text-lg font-bold text-[#1e1e1e]">Catálogos académicos</h2>
   <p class="mt-1 text-sm text-[#7c8691]">Opciones disponibles al crear grupos y matrículas. Los grupos los gestiona el director.</p>
   <div class="mt-6 grid gap-5 md:grid-cols-2">
-    @for (catalog of catalogs(); track catalog.kind) {
+    @for (catalog of visibleCatalogs(); track catalog.kind) {
       <article class="rounded-xl border border-[#ece6e7] p-4">
         <h3 class="font-semibold text-[#1e1e1e]">{{ catalog.title }}</h3>
-        <form class="mt-3 flex gap-2" (submit)="askAdd(catalog.kind, $event)">
-          <label class="min-w-0 flex-1">
-            <span class="sr-only">Nuevo elemento de {{ catalog.title }}</span>
-            <input
-              class="h-11 w-full rounded-md border border-[#d5d0d1] px-3 text-sm outline-none focus-visible:border-[#a9002d]"
-              type="text"
-              maxlength="80"
+        <form class="mt-3 flex items-end gap-2" (submit)="askAdd(catalog.kind, $event)">
+          <div class="min-w-0 flex-1">
+            <ui-field
+              [id]="'catalog-draft-' + catalog.kind"
+              [label]="'Nuevo elemento de ' + catalog.title"
               [value]="drafts()[catalog.kind]"
-              (input)="onDraft(catalog.kind, $event)"
+              (valueChange)="onDraft(catalog.kind, $event)"
             />
-          </label>
+          </div>
           <ui-button type="submit" variant="soft">Agregar</ui-button>
         </form>
         <ul class="mt-4 flex flex-wrap gap-2">
@@ -33,6 +38,8 @@
           }
         </ul>
       </article>
+    } @empty {
+      <p class="text-sm text-[#7c8691]" role="status">No se encontraron elementos en los catálogos.</p>
     }
   </div>
 </section>
@@ -40,33 +47,8 @@
 <section class="mt-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)] sm:p-8" aria-label="Consulta de combos horarios">
   <h2 class="text-lg font-bold text-[#1e1e1e]">Consulta de combos horarios</h2>
   <p class="mt-1 text-sm text-[#7c8691]">El director configura los horarios. Aquí solo se consultan.</p>
-  <div class="mt-5 overflow-x-auto">
-    <table class="w-full min-w-[40rem] border-collapse text-left text-sm text-[#1e1e1e]">
-      <thead>
-        <tr class="border-b border-[#ece6e7] font-bold">
-          <th class="h-12 px-3" scope="col">Nro de horario</th>
-          <th class="h-12 px-3" scope="col">Día</th>
-          <th class="h-12 px-3" scope="col">Tipo de clase</th>
-          <th class="h-12 px-3" scope="col">Horas</th>
-          <th class="h-12 px-3" scope="col">Responsable</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (row of schedules(); track row.number + row.day + row.hours) {
-          <tr class="border-b border-[#ece6e7]">
-            <td class="h-14 px-3">{{ row.number }}</td>
-            <td class="h-14 px-3">{{ row.day }}</td>
-            <td class="h-14 px-3">{{ row.classType }}</td>
-            <td class="h-14 px-3">{{ row.hours }}</td>
-            <td class="h-14 px-3">{{ row.owner }}</td>
-          </tr>
-        } @empty {
-          <tr>
-            <td class="h-14 px-3 text-[#7c8691]" colspan="5">Aún no hay combos horarios.</td>
-          </tr>
-        }
-      </tbody>
-    </table>
+  <div class="mt-5">
+    <ui-table [columns]="scheduleColumns" [rows]="scheduleRows()" [emptyMessage]="scheduleEmpty()" />
   </div>
 </section>
 

@@ -34,7 +34,15 @@
 }
 
 .select__placeholder { color: var(--color-text-muted); }
-.select__chevron { margin-inline-start: 1rem; font-size: 1.25rem; line-height: 1; }
+.select__chevron {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  margin-inline-start: 1rem;
+}
 
 .select__menu {
   position: absolute;
@@ -59,4 +67,14 @@
   cursor: not-allowed;
   color: var(--color-text-muted);
   background: var(--color-background-light-gray);
+}
+
+.select__control--invalid {
+  border-color: var(--color-brand-primary);
+}
+
+.select__message {
+  margin: 0;
+  color: var(--color-brand-primary);
+  font-size: 0.8125rem;
 }

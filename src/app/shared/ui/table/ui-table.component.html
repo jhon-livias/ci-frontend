@@ -21,7 +21,7 @@
               }
             </th>
           }
-          @if (actions()) { <th scope="col">Acciones</th> }
+          @if (actions()) { <th class="table-card__cell--center" scope="col">Acciones</th> }
         </tr>
       </thead>
       <tbody>
@@ -31,12 +31,32 @@
               <td
                 [class.table-card__cell--center]="column.align === 'center'"
                 [class.table-card__cell--end]="column.align === 'end'"
-              >{{ row[column.key] ?? '—' }}</td>
+              >
+                @if (column.kind === 'switch') {
+                  <button
+                    class="table-card__switch"
+                    type="button"
+                    role="switch"
+                    [attr.aria-checked]="row[column.key] === true"
+                    [attr.aria-label]="'Estado de ' + rowLabel(row)"
+                    (click)="toggle.emit(row)"
+                  >
+                    <span [class.table-card__switch-knob--on]="row[column.key] === true"></span>
+                  </button>
+                } @else {
+                  {{ row[column.key] ?? '—' }}
+                }
+              </td>
             }
             @if (actions()) {
               <td>
-                <button type="button" class="mr-3 text-[#92001f] underline" (click)="edit.emit(row)" [attr.aria-label]="'Editar ' + row['name']">Editar</button>
-                <button type="button" class="text-[#92001f] underline" (click)="remove.emit(row)" [attr.aria-label]="'Eliminar ' + row['name']">Eliminar</button>
+                <div class="table-card__actions">
+                  @if (allowReset()) {
+                    <ui-icon-button icon="key" [label]="'Restablecer clave de ' + rowLabel(row)" (click)="reset.emit(row)" />
+                  }
+                  <ui-icon-button icon="edit" [label]="'Editar ' + rowLabel(row)" (click)="edit.emit(row)" />
+                  <ui-icon-button icon="trash" tone="danger" [label]="'Eliminar ' + rowLabel(row)" (click)="remove.emit(row)" />
+                </div>
               </td>
             }
           </tr>
@@ -52,7 +72,7 @@
   <footer class="table-card__footer">
     <label class="table-card__page-size">
       <span>Elementos por página:</span>
-      <select [value]="pageSize()" (change)="changePageSize($event)" aria-label="Elementos por página">
+      <select [value]="activePageSize()" (change)="changePageSize($event)" aria-label="Elementos por página">
         @for (size of pageSizeOptions(); track size) {
           <option [value]="size">{{ size }}</option>
         }
@@ -61,10 +81,10 @@
     <p class="table-card__range">{{ rangeStart() }}-{{ rangeEnd() }} de {{ total() }}</p>
     <div class="table-card__pagination" aria-label="Paginación">
       <button type="button" aria-label="Página anterior" (click)="changePage(currentPage() - 1)" [disabled]="currentPage() === 0">
-        <span aria-hidden="true">‹</span>
+        <ui-icon name="chevron-left" />
       </button>
       <button type="button" aria-label="Página siguiente" (click)="changePage(currentPage() + 1)" [disabled]="currentPage() >= pageCount() - 1">
-        <span aria-hidden="true">›</span>
+        <ui-icon name="chevron-right" />
       </button>
     </div>
   </footer>

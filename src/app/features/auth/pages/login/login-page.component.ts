@@ -4,12 +4,13 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthApiService } from '../../../../core/auth/auth-api.service';
 import { AuthSessionService } from '../../../../core/auth/auth-session.service';
 import type { LoginCredentials } from '../../models/login-credentials.model';
+import { AlertTone, UiAlertComponent } from '../../../../shared/ui/alert/ui-alert.component';
 import { UiButtonComponent } from '../../../../shared/ui/button/ui-button.component';
 import { UiFieldComponent } from '../../../../shared/ui/field/ui-field.component';
 import { AuthLayoutComponent } from '../../../../layouts/auth-layout/auth-layout.component';
 
 @Component({
-  imports: [FormField, FormRoot, RouterLink, UiButtonComponent, UiFieldComponent, AuthLayoutComponent],
+  imports: [FormField, FormRoot, RouterLink, UiAlertComponent, UiButtonComponent, UiFieldComponent, AuthLayoutComponent],
   templateUrl: './login-page.component.html',
 })
 export class LoginPageComponent {
@@ -23,14 +24,14 @@ export class LoginPageComponent {
     minLength(path.password, 8, { message: 'La contraseña debe tener al menos 8 caracteres.' });
   });
 
-  protected readonly notice = signal<string | null>(null);
+  protected readonly notice = signal<{ text: string; tone: AlertTone } | null>(null);
   protected readonly isSubmitting = signal(false);
 
   protected async submit(): Promise<void> {
     this.loginForm().markAsTouched();
 
     if (this.loginForm().invalid()) {
-      this.notice.set('Revisa los datos marcados para continuar.');
+      this.notice.set({ text: 'Revisa los datos marcados para continuar.', tone: 'warning' });
       return;
     }
 
@@ -41,13 +42,16 @@ export class LoginPageComponent {
       this.session.start(authenticatedSession);
       await this.router.navigateByUrl(this.session.defaultRoute());
     } catch {
-      this.notice.set('No pudimos iniciar sesión. Verifica tus credenciales e inténtalo nuevamente.');
+      this.notice.set({ text: 'No pudimos iniciar sesión. Verifica tus credenciales e inténtalo nuevamente.', tone: 'error' });
     } finally {
       this.isSubmitting.set(false);
     }
   }
 
   protected notifyUnavailable(feature: 'Google'): void {
-    this.notice.set(`La opción de ${feature} se habilitará al integrar el proveedor de identidad institucional.`);
+    this.notice.set({
+      text: `La opción de ${feature} se habilitará al integrar el proveedor de identidad institucional.`,
+      tone: 'info',
+    });
   }
 }

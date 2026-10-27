@@ -39,10 +39,12 @@ describe('AdminHistoryComponent', () => {
     fixture.detectChanges();
     const text = fixture.nativeElement.textContent as string;
 
-    expect(text).toContain('HISTORIAL');
+    expect(text).toContain('Inicio / Historial');
+    expect(text).toContain('Historial');
+    expect(text).toContain('Buscar historial');
     expect(text).toContain('Administrador UPRIT');
     expect(text).toContain('Creó la cuenta de Ada Lima.');
-    expect(text).toContain('Items por pagina:');
+    expect(text).toContain('Elementos por página:');
     expect(text).toContain('1-1 de 1');
   });
 
@@ -51,9 +53,11 @@ describe('AdminHistoryComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
-    const select = fixture.nativeElement.querySelector('select') as HTMLSelectElement;
-    select.value = 'Administrador';
-    select.dispatchEvent(new Event('change'));
+    (fixture.nativeElement.querySelector('#history-role [role="combobox"]') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const option = [...fixture.nativeElement.querySelectorAll('[role="option"]')].find((item) => (item as HTMLElement).textContent?.trim() === 'Administrador') as HTMLButtonElement;
+    option.click();
     await fixture.whenStable();
 
     expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ role: 'Administrador', page: 1, pageSize: 5 }));

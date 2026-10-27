@@ -73,6 +73,14 @@ export class AuthApiService {
     await firstValueFrom(this.http.post('/api/v1/auth/password', { password }, { withCredentials: true }));
   }
 
+  async requestPasswordRecovery(email: string): Promise<void> {
+    await firstValueFrom(this.http.post('/api/v1/auth/password-recovery', { email }, { withCredentials: true }));
+  }
+
+  async confirmPasswordRecovery(email: string, code: string, password: string): Promise<void> {
+    await firstValueFrom(this.http.post('/api/v1/auth/password-recovery/confirm', { email, code, password }, { withCredentials: true }));
+  }
+
   private toSession(response: unknown): AuthSessionSnapshot {
     if (!isLoginResponseDto(response)) throw new Error('La respuesta de autenticación no tiene un formato válido.');
     const roles = response.user.roles.filter((role): role is ApplicationRole => applicationRoles.includes(role as ApplicationRole));

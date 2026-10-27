@@ -8,10 +8,13 @@
   background: rgb(23 23 23 / 46%);
 }
 
-.confirm__card {
+.confirm__frame {
   position: relative;
   width: min(32rem, 100%);
-  margin-top: 1.75rem;
+  padding-top: 2.25rem;
+}
+
+.confirm__card {
   overflow: hidden;
   border-radius: 1.25rem;
   background: #fff;
@@ -20,8 +23,9 @@
 
 .confirm__mark {
   position: absolute;
-  top: 0;
+  top: 2.25rem;
   left: 50%;
+  z-index: 1;
   display: grid;
   width: 4.5rem;
   height: 4.5rem;

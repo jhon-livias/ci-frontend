@@ -46,4 +46,16 @@ describe('UiTableComponent', () => {
 
     expect(pageChange).toHaveBeenCalledWith({ page: 0, pageSize: 2 });
   });
+
+  it('keeps a server page intact and reports its range', () => {
+    fixture.componentRef.setInput('totalItems', 12);
+    fixture.componentRef.setInput('pageIndex', 1);
+    fixture.componentRef.setInput('selectedPageSize', 2);
+    fixture.detectChanges();
+
+    const names = [...fixture.nativeElement.querySelectorAll('tbody td')].map((cell: HTMLElement) => cell.textContent?.trim());
+    expect(names).toContain('Docente');
+    expect(names).toContain('Alumnos');
+    expect(fixture.nativeElement.textContent).toContain('3-4 de 12');
+  });
 });

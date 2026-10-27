@@ -1,35 +1,24 @@
-<p class="text-xs text-[#8d98a3]">
+<ui-page-header [items]="crumbs()" title="Usuarios" (activate)="onCrumb($event)">
   @if (editorOpen() || resetNotice()) {
-    <button class="hover:underline" type="button" (click)="backToList()">Inicio / Usuarios</button>
+    <ui-button type="button" (click)="backToList()">Volver</ui-button>
   } @else {
-    Inicio / Usuarios
+    <ui-button type="button" (click)="beginCreate()">Agregar</ui-button>
   }
-</p>
-<div class="mt-4 flex flex-wrap items-center justify-between gap-4">
-  <h1 class="font-[var(--font-heading)] text-[1.65rem] font-bold tracking-wide text-[#a9002d]">USUARIOS</h1>
-  @if (editorOpen() || resetNotice()) {
-    <button class="rounded-full bg-[#a9002d] px-8 py-2.5 text-sm font-semibold text-white" type="button" (click)="backToList()">Volver</button>
-  } @else {
-    <button class="rounded-full bg-[#a9002d] px-8 py-2.5 text-sm font-semibold text-white" type="button" (click)="beginCreate()">Agregar</button>
-  }
-</div>
+</ui-page-header>
 @if (message()) {
   <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
 }
 
 @if (resetNotice(); as notice) {
-  <section class="mx-auto mt-8 max-w-3xl rounded-2xl bg-white px-8 py-10 text-center shadow-[0_8px_24px_rgb(30_30_30_/_8%)] sm:px-14" aria-labelledby="password-reset-title">
+  <section class="mt-8 w-full rounded-2xl bg-white px-8 py-10 shadow-[0_8px_24px_rgb(30_30_30_/_8%)] sm:px-14" aria-labelledby="password-reset-title">
     <h2 class="font-[var(--font-heading)] text-xl font-bold tracking-wide text-[#1e1e1e]" id="password-reset-title">CONTRASEÑA RESTABLECIDA</h2>
-    <p class="mx-auto mt-6 max-w-md text-sm leading-relaxed text-[#1e1e1e]">
+    <p class="mt-6 max-w-3xl text-sm leading-relaxed text-[#1e1e1e]">
       La nueva contraseña para <span class="font-bold">{{ notice.username }}</span> es:
     </p>
     <p class="mt-2 text-sm font-semibold text-[#c4002f]">{{ notice.password }}</p>
-    <p class="mx-auto mt-4 max-w-md text-sm leading-relaxed text-[#1e1e1e]">Por favor, compártela de forma segura con el usuario.</p>
-    <p class="mx-auto mt-1 max-w-md text-sm leading-relaxed text-[#1e1e1e]">Se recomienda que cambie su contraseña en el próximo inicio de sesión.</p>
-    <label class="mx-auto mt-8 flex max-w-md items-center gap-3 text-left text-sm text-[#1e1e1e]">
-      <input class="size-4 shrink-0 accent-[#a9002d]" type="checkbox" [checked]="notice.mustChange" (change)="toggleMustChange($event)" />
-      <span>El usuario cambia de contraseña al iniciar sesión</span>
-    </label>
+    <p class="mt-4 max-w-3xl text-sm leading-relaxed text-[#1e1e1e]">Por favor, compártela de forma segura con el usuario.</p>
+    <p class="mt-1 max-w-3xl text-sm leading-relaxed text-[#1e1e1e]">Se recomienda que cambie su contraseña en el próximo inicio de sesión.</p>
+    <ui-checkbox id="must-change" class="mt-8 max-w-3xl text-sm text-[#1e1e1e]" label="El usuario cambia de contraseña al iniciar sesión" [checked]="notice.mustChange" (checkedChange)="toggleMustChange($event)" />
     <div class="mt-10 flex justify-end gap-4">
       <button class="rounded-full border border-[#c4002f] px-8 py-2.5 text-sm font-semibold text-[#c4002f]" type="button" (click)="backToList()">Volver</button>
       <button class="rounded-full bg-[#a9002d] px-8 py-2.5 text-sm font-semibold text-white disabled:opacity-60" type="button" [disabled]="saving()" (click)="acceptReset()">Aceptar</button>
@@ -40,52 +29,55 @@
     <ui-stepper [active]="step()" [steps]="steps" (stepChange)="onStep($event)" />
   </div>
   @if (step() === 0) {
-    <form class="mx-auto mt-8 max-w-5xl rounded-2xl bg-white px-6 py-8 shadow-[0_8px_24px_rgb(30_30_30_/_8%)] sm:px-10" [formRoot]="accountForm" (submit)="$event.preventDefault(); next()">
+    <form class="mt-8 w-full rounded-2xl bg-white px-6 py-8 shadow-[0_8px_24px_rgb(30_30_30_/_8%)] sm:px-10" [formRoot]="accountForm" (submit)="$event.preventDefault(); next()">
       <h2 class="font-[var(--font-heading)] text-xl font-bold tracking-wide text-[#a9002d]">{{ editingId() ? 'EDITAR USUARIO' : 'NUEVO USUARIO' }}</h2>
       <div class="mt-6 grid gap-4 md:grid-cols-2">
         <div class="md:col-span-2">
           <ui-field [formField]="accountForm.firstName" id="user-first-name" label="Nombres" placeholder="Ingrese sus nombres" />
         </div>
         <ui-field [formField]="accountForm.paternalLastName" id="user-paternal-name" label="Apellido Paterno" placeholder="Ingrese su Apellido Paterno" />
-        <ui-field [formField]="accountForm.maternalLastName" id="user-maternal-name" label="Apellido Materno" placeholder="Ingrese su Apellido Materno" />
+        <ui-field [formField]="accountForm.maternalLastName" id="user-maternal-name" label="Apellido Materno" placeholder="Ingrese su Apellido Materno" [error]="maternalError()" />
       </div>
       <div class="mt-4 grid gap-4 md:grid-cols-3">
-        <ui-select id="user-document-type" label="Tipo de documento" [options]="documentTypes" [required]="true" [searchable]="false" [value]="values().documentType" (valueChange)="setDraft('documentType', $event)" />
-        <ui-field [formField]="accountForm.documentNumber" id="user-document-number" label="N° de documento" placeholder="74034567" />
-        <ui-select id="user-site" label="Sede" placeholder="Seleccionar" [options]="siteOptions()" [required]="true" [value]="values().siteId" (valueChange)="setDraft('siteId', $event)" />
+        <ui-select id="user-document-type" label="Tipo de documento" [error]="documentTypeError()" [options]="documentTypes" [required]="true" [searchable]="false" [value]="values().documentType" (valueChange)="setDraft('documentType', $event)" />
+        <ui-field [formField]="accountForm.documentNumber" id="user-document-number" label="N° de documento" placeholder="74034567" [error]="documentError()" />
+        <ui-select id="user-site" label="Sede" placeholder="Seleccionar" [error]="siteError()" [options]="siteOptions()" [required]="!editingId()" [value]="values().siteId" (valueChange)="setDraft('siteId', $event)" />
       </div>
       <div class="mt-4 grid gap-4 md:grid-cols-2">
         <ui-field [formField]="accountForm.phone" id="user-phone" label="N° Teléfono" placeholder="" type="tel" />
         <div class="flex items-end gap-2">
-          <label class="w-32 shrink-0">
-            <span class="mb-2 block font-[var(--font-heading)] text-sm font-semibold">Celular <span aria-hidden="true">*</span></span>
-            <select class="h-12 w-full rounded-md border border-[#d5d0d1] bg-white px-2 text-sm" aria-label="Código de país" [value]="values().mobileCountry" (change)="setDraft('mobileCountry', $any($event.target).value)">
-              @for (country of countries; track country.value) {
-                <option [value]="country.value">{{ country.label }}</option>
-              }
-            </select>
-          </label>
+          <div class="w-40 shrink-0">
+            <ui-select id="user-mobile-country" label="Celular" [error]="countryError()" [options]="countries" [required]="true" [searchable]="false" [value]="values().mobileCountry" (valueChange)="setDraft('mobileCountry', $event)" />
+          </div>
           <div class="min-w-0 flex-1">
-            <ui-field [formField]="accountForm.mobile" id="user-mobile" label="Número" placeholder="946869590" type="tel" />
+            <ui-field [formField]="accountForm.mobile" id="user-mobile" label="Número" placeholder="946869590" type="tel" [error]="mobileError()" />
           </div>
         </div>
       </div>
       <div class="mt-4 grid gap-4 md:grid-cols-2">
-        <ui-field [formField]="accountForm.email" autocomplete="off" id="user-email" label="Email" placeholder="Ingrese su correo" type="email" />
-        <ui-field [formField]="accountForm.password" autocomplete="new-password" id="user-password" label="Contraseña" placeholder="Ingrese su contraseña" type="password" [hint]="editingId() ? 'Déjala vacía para conservar la actual.' : 'Mínimo 8 caracteres.'" [showPasswordToggle]="true" />
+        <div>
+          <ui-field [formField]="accountForm.email" autocomplete="off" id="user-email" label="Email" placeholder="nombre@uprit.edu.pe" type="email" [error]="emailError()" />
+          @if (!emailError()) {
+            <p class="mt-2 text-xs leading-relaxed text-[#5e5254]" id="user-email-domain">{{ institutionalEmailMessage }}</p>
+          }
+        </div>
+        <ui-field [formField]="accountForm.password" autocomplete="new-password" id="user-password" label="Contraseña" placeholder="Ingrese su contraseña" type="password" [error]="passwordError()" [hint]="editingId() ? 'Déjala vacía para conservar la actual.' : 'Mínimo 8 caracteres.'" [showPasswordToggle]="true" />
       </div>
-      <div class="mt-4 max-w-xs">
+      <div class="mt-4 grid gap-4 md:grid-cols-3">
         <ui-select id="user-status" label="Estado" [options]="statusOptions" [searchable]="false" [value]="values().enabled" (valueChange)="setDraft('enabled', $event)" />
       </div>
-      <div class="mt-8 flex justify-center gap-4">
+      <div class="mt-8 flex flex-wrap justify-end gap-4">
         <button class="rounded-full border border-[#c4002f] px-10 py-2.5 text-sm font-semibold text-[#c4002f]" type="button" (click)="closeEditor()">Atrás</button>
-        <button class="rounded-full bg-[#3d3536] px-10 py-2.5 text-sm font-semibold text-white" type="submit">Siguiente</button>
+        @if (editingId()) {
+          <button class="rounded-full bg-[#a9002d] px-10 py-2.5 text-sm font-semibold text-white disabled:opacity-60" type="button" [disabled]="saving()" (click)="saveAccount()">Guardar</button>
+        }
+        <button class="rounded-full bg-[#3d3536] px-10 py-2.5 text-sm font-semibold text-white disabled:opacity-60" type="submit" [disabled]="saving()">Siguiente</button>
       </div>
     </form>
   } @else {
-    <section class="mx-auto mt-8 max-w-5xl rounded-2xl bg-white px-6 py-8 shadow-[0_8px_24px_rgb(30_30_30_/_8%)] sm:px-10" aria-label="Permisos del usuario">
+    <section class="mt-8 w-full rounded-2xl bg-white px-6 py-8 shadow-[0_8px_24px_rgb(30_30_30_/_8%)] sm:px-10" aria-label="Permisos del usuario">
       <h2 class="font-[var(--font-heading)] text-xl font-bold tracking-wide text-[#a9002d]">PERMISOS</h2>
-      <div class="mt-5 max-w-xs">
+      <div class="mt-5 grid gap-4 md:grid-cols-3">
         <ui-select id="user-permission" label="Permiso" [options]="permissionChoices()" [value]="selectedPermissionId()" (valueChange)="selectedPermissionId.set($event)" />
       </div>
       <article class="mt-6 overflow-hidden rounded-xl border border-[#eadfe1]">
@@ -128,124 +120,47 @@
           <span>Todo</span>
         </div>
       </article>
-      <div class="mt-8 flex justify-center gap-4">
+      <div class="mt-8 flex flex-wrap justify-end gap-4">
         <button class="rounded-full border border-[#c4002f] px-10 py-2.5 text-sm font-semibold text-[#c4002f]" type="button" (click)="closeEditor()">Cancelar</button>
         <button class="rounded-full bg-[#3d3536] px-10 py-2.5 text-sm font-semibold text-white disabled:opacity-60" type="button" [disabled]="saving()" (click)="save()">Guardar</button>
       </div>
     </section>
   }
 } @else {
-<div class="mt-6 grid gap-3 md:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(10rem,1fr))]">
-  <label>
-    <span class="sr-only">Buscar usuarios</span>
-    <input
-      class="h-11 w-full rounded-md border border-[#d5d0d1] bg-white px-4 text-sm text-[#1e1e1e] outline-none placeholder:text-[#b0b0b0] focus-visible:border-[#a9002d]"
-      type="search"
-      placeholder="Search"
-      [value]="search()"
-      (input)="onSearch($event)"
-    />
-  </label>
-  <label>
-    <span class="sr-only">Tipo</span>
-    <select class="h-11 w-full rounded-md border border-[#d5d0d1] bg-white px-3 text-sm text-[#1e1e1e]" aria-label="Tipo" [value]="role()" (change)="onFilter('role', $event)">
-      <option value="">Tipo</option>
-      @for (type of types(); track type.code) {
-        <option [value]="type.code">{{ type.name }}</option>
-      }
-    </select>
-  </label>
-  <label>
-    <span class="sr-only">Sede</span>
-    <select class="h-11 w-full rounded-md border border-[#d5d0d1] bg-white px-3 text-sm text-[#1e1e1e]" aria-label="Sede" [value]="siteId()" (change)="onFilter('site', $event)">
-      <option value="">Sede</option>
-      @for (site of sites(); track site.id) {
-        <option [value]="site.id">{{ site.name }}</option>
-      }
-    </select>
-  </label>
-  <label>
-    <span class="sr-only">Estado</span>
-    <select class="h-11 w-full rounded-md border border-[#d5d0d1] bg-white px-3 text-sm text-[#1e1e1e]" aria-label="Estado" [value]="status()" (change)="onFilter('status', $event)">
-      <option value="">Estado</option>
-      @for (item of statuses(); track item.code) {
-        <option [value]="item.code">{{ item.name }}</option>
-      }
-    </select>
-  </label>
-</div>
-
-<h2 class="mt-8 font-[var(--font-heading)] text-lg font-bold tracking-wide text-[#a9002d]">MÓDULO</h2>
-<section class="mt-4 overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgb(30_30_30_/_8%)]" aria-label="Usuarios">
-  <div class="overflow-x-auto px-6 pt-4 sm:px-10">
-    <table class="w-full min-w-[52rem] border-collapse text-sm text-[#1e1e1e]">
-      <thead>
-        <tr class="border-b border-[#ece6e7] text-center font-bold">
-          <th class="h-12 px-3 font-bold" scope="col"><button class="inline-flex items-center gap-1" type="button" (click)="changeSort('document')">Documento <svg aria-hidden="true" class="size-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="m8 9 4-4 4 4M8 15l4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg></button></th>
-          <th class="h-12 px-3 font-bold" scope="col"><button class="inline-flex items-center gap-1" type="button" (click)="changeSort('firstName')">Nombres <svg aria-hidden="true" class="size-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="m8 9 4-4 4 4M8 15l4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg></button></th>
-          <th class="h-12 px-3 font-bold" scope="col"><button class="inline-flex items-center gap-1" type="button" (click)="changeSort('paternalLastName')">Apellido Paterno <svg aria-hidden="true" class="size-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="m8 9 4-4 4 4M8 15l4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg></button></th>
-          <th class="h-12 px-3 font-bold" scope="col"><button class="inline-flex items-center gap-1" type="button" (click)="changeSort('maternalLastName')">Apellido Materno <svg aria-hidden="true" class="size-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="m8 9 4-4 4 4M8 15l4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg></button></th>
-          <th class="h-12 px-3 font-bold" scope="col"><button class="inline-flex items-center gap-1" type="button" (click)="changeSort('type')">Tipo ({{ types().length }}) <svg aria-hidden="true" class="size-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="m8 9 4-4 4 4M8 15l4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg></button></th>
-          <th class="h-12 px-3 font-bold" scope="col"><span class="inline-flex items-center gap-1">Acciones <svg aria-hidden="true" class="size-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="m8 9 4-4 4 4M8 15l4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg></span></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (row of visibleRows(); track row.id; let index = $index) {
-          <tr class="border-b border-[#ece6e7] text-center" [class.bg-[#f6f3f4]]="!row.placeholder && index % 2 === 1">
-            <td class="h-14 px-3">{{ row.documentNumber }}</td>
-            <td class="h-14 px-3">{{ row.firstName }}</td>
-            <td class="h-14 px-3">{{ row.paternalLastName }}</td>
-            <td class="h-14 px-3">{{ row.maternalLastName }}</td>
-            <td class="h-14 px-3">{{ row.typeName }}</td>
-            <td class="h-14 px-3">
-              @if (!row.placeholder) {
-                <div class="flex items-center justify-center gap-2">
-                  <button class="grid size-8 place-items-center rounded-md bg-[#1f9d55] text-white" type="button" [attr.aria-label]="'Restablecer clave de ' + row.firstName" (click)="resetPassword(row.id)">
-                    <svg aria-hidden="true" class="size-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                      <path d="M20 12a8 8 0 1 1-2.2-5.6" stroke-linecap="round" />
-                      <path d="M20 4v5h-5" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                  </button>
-                  <button class="grid size-8 place-items-center rounded-md bg-[#3d3536] text-white" type="button" [attr.aria-label]="'Editar ' + row.firstName" (click)="beginEdit(row.id)">
-                    <svg aria-hidden="true" class="size-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                      <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17z" stroke-linejoin="round" />
-                      <path d="m13.5 6.5 3 3" stroke-linecap="round" />
-                    </svg>
-                  </button>
-                  <button class="grid size-8 place-items-center rounded-md bg-[#c4002f] text-white" type="button" [attr.aria-label]="'Eliminar ' + row.firstName" (click)="remove(row.id)">
-                    <svg aria-hidden="true" class="size-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                      <path d="M5 7h14M9 7V5h6v2M8 7l1 12h6l1-12" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                  </button>
-                </div>
-              }
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
+<ui-filter-bar>
+  <div class="w-full min-w-56 max-w-md flex-1">
+    <ui-field id="user-search" label="Buscar usuario" type="search" [value]="search()" (valueChange)="onSearch($event)" />
   </div>
-  <footer class="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 px-6 py-8 text-sm text-[#2b2b2b]">
-    <label class="flex items-center gap-3">
-      <span>Items por pagina:</span>
-      <span class="relative">
-        <select class="h-10 appearance-none rounded-md border border-[#d0d0d0] bg-white pr-8 pl-3 text-sm" aria-label="Items por pagina" [value]="pageSize()" (change)="changePageSize($event)">
-          @for (size of pageSizeOptions; track size) {
-            <option [value]="size">{{ size }}</option>
-          }
-        </select>
-        <svg aria-hidden="true" class="pointer-events-none absolute top-1/2 right-2 size-3.5 -translate-y-1/2 text-[#666]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-          <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </span>
-    </label>
-    <p class="m-0">{{ rangeLabel() }}</p>
-    <div class="flex items-center gap-1" aria-label="Paginación">
-      <button class="grid size-8 place-items-center text-2xl leading-none text-[#8a8a8a] disabled:opacity-40" type="button" aria-label="Página anterior" [disabled]="currentPage() === 0" (click)="changePage(currentPage() - 1)">‹</button>
-      <button class="grid size-8 place-items-center text-2xl leading-none text-[#8a8a8a] disabled:opacity-40" type="button" aria-label="Página siguiente" [disabled]="currentPage() >= pageCount() - 1" (click)="changePage(currentPage() + 1)">›</button>
-    </div>
-  </footer>
-</section>
+  <div class="w-full min-w-44 max-w-xs flex-1">
+    <ui-select id="user-filter-type" label="Tipo" [options]="typeFilterOptions()" [searchable]="false" [value]="role()" (valueChange)="onFilter('role', $event)" />
+  </div>
+  <div class="w-full min-w-44 max-w-xs flex-1">
+    <ui-select id="user-filter-site" label="Sede" [options]="siteFilterOptions()" [searchable]="false" [value]="siteId()" (valueChange)="onFilter('site', $event)" />
+  </div>
+  <div class="w-full min-w-44 max-w-xs flex-1">
+    <ui-select id="user-filter-status" label="Estado" [options]="statusFilterOptions()" [searchable]="false" [value]="status()" (valueChange)="onFilter('status', $event)" />
+  </div>
+</ui-filter-bar>
+
+<h2 class="mt-8 font-[var(--font-heading)] text-lg font-semibold text-[#a9002d]">Módulo</h2>
+<div class="mt-4">
+  <ui-table
+    [actions]="true"
+    [allowReset]="true"
+    [columns]="columns()"
+    [rows]="tableRows()"
+    [totalItems]="total()"
+    [pageIndex]="page()"
+    [selectedPageSize]="pageSize()"
+    [sortState]="tableSort()"
+    emptyMessage="No se encontraron usuarios."
+    (sortChange)="onTableSort($event)"
+    (pageChange)="onTablePage($event)"
+    (edit)="editUser($event)"
+    (reset)="resetUser($event)"
+    (remove)="removeUser($event)"
+  />
+</div>
 }
 @if (confirmation(); as dialog) {
   <ui-confirm [message]="dialog.message" [details]="dialog.details" (confirmed)="acceptConfirmation()" (cancelled)="cancelConfirmation()" />

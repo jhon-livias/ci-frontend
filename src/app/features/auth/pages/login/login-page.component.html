@@ -2,13 +2,13 @@
   <section aria-labelledby="login-title">
     <h1 class="sr-only" id="login-title">Iniciar sesión</h1>
 
-    <form [formRoot]="loginForm" (submit)="submit()" class="space-y-4" aria-describedby="login-notice">
+    <form [formRoot]="loginForm" (submit)="submit()" class="space-y-4">
       <ui-field
         [formField]="loginForm.username"
         autocomplete="username"
         id="username"
         label="Usuario"
-        placeholder="Ingresa tu usuario"
+        placeholder="Ingresa tu usuario o correo"
       />
 
       <ui-field
@@ -20,6 +20,10 @@
         [showPasswordToggle]="true"
         type="password"
       />
+
+      @if (notice(); as message) {
+        <ui-alert id="login-notice" [tone]="message.tone">{{ message.text }}</ui-alert>
+      }
 
       <ui-button class="mt-2" [disabled]="isSubmitting()" [fullWidth]="true" [pill]="true" type="submit">
         {{ isSubmitting() ? 'Ingresando…' : 'Iniciar sesión' }}
@@ -40,8 +44,5 @@
       </a>
     </div>
 
-    <p class="mt-5 min-h-5 text-center text-sm text-[#5e5254]" id="login-notice" aria-live="polite">
-      {{ notice() }}
-    </p>
   </section>
 </app-auth-layout>

@@ -1,6 +1,11 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 
+import { UiButtonComponent } from '../../../../shared/ui/button/ui-button.component';
 import { UiConfirmComponent, type UiConfirmDetail } from '../../../../shared/ui/confirm/ui-confirm.component';
+import { UiFieldComponent } from '../../../../shared/ui/field/ui-field.component';
+import { UiFilterBarComponent } from '../../../../shared/ui/filter-bar/ui-filter-bar.component';
+import { UiPageHeaderComponent, type UiBreadcrumbItem } from '../../../../shared/ui/page-header/ui-page-header.component';
+import { UiTableComponent, type UiTableColumn, type UiTablePageChange, type UiTableRow } from '../../../../shared/ui/table/ui-table.component';
 import { UserTypeCatalogService, type UserTypePermissionOption } from '../../data-access/user-type-catalog.service';
 
 interface UserTypeRow {
@@ -21,77 +26,78 @@ interface EditorPermission {
 
 @Component({
   selector: 'app-admin-user-types',
-  imports: [UiConfirmComponent],
+  imports: [UiButtonComponent, UiConfirmComponent, UiFieldComponent, UiFilterBarComponent, UiPageHeaderComponent, UiTableComponent],
   templateUrl: './admin-user-types.component.html',
 })
 export class AdminUserTypesComponent implements OnInit {
   private readonly catalog = inject(UserTypeCatalogService);
-  protected readonly pageSizeOptions = [5, 10, 20] as const;
+  protected readonly columns: readonly UiTableColumn[] = [
+    { key: 'name', label: 'Nombre' },
+    { key: 'moduleName', label: 'Módulos' },
+    { key: 'permissions', label: 'Permisos' },
+    { key: 'enabled', label: 'Estado', kind: 'switch', align: 'center' },
+  ];
   protected readonly permissionOptions = signal<readonly UserTypePermissionOption[]>([]);
   protected readonly search = signal('');
   protected readonly page = signal(0);
-  protected readonly pageSize = signal<(typeof this.pageSizeOptions)[number]>(5);
+  protected readonly pageSize = signal<5 | 10 | 20>(5);
   protected readonly total = signal(0);
   protected readonly saving = signal(false);
   protected readonly message = signal('');
   protected readonly editorOpen = signal(false);
+  protected readonly crumbs = computed<readonly UiBreadcrumbItem[]>(() => this.editorOpen()
+    ? [{ label: 'Inicio', action: 'list' }, { label: 'Tipos de usuario', action: 'list' }]
+    : [{ label: 'Inicio' }, { label: 'Tipos de usuario' }]);
   protected readonly editingId = signal<string | null>(null);
   protected readonly editorName = signal('');
   protected readonly access = signal<readonly EditorPermission[]>([]);
   protected readonly confirmation = signal<{ message: string; details: readonly UiConfirmDetail[]; run: () => Promise<void> } | null>(null);
   private readonly items = signal<readonly UserTypeRow[]>([]);
-
-  protected readonly pageCount = computed(() => Math.max(1, Math.ceil(this.total() / this.pageSize())));
-  protected readonly currentPage = computed(() => Math.min(this.page(), this.pageCount() - 1));
-  protected readonly visibleRows = computed(() => {
-    const size = this.pageSize();
-    const missing = Math.max(0, size - this.items().length);
-    const pads = Array.from({ length: missing }, (_, index): UserTypeRow => ({
-      id: `vacio-${this.currentPage()}-${index}`,
-      name: '',
-      moduleName: '',
-      permissions: '',
-      permissionNames: [],
-      enabled: false,
-      placeholder: true,
-    }));
-    return [...this.items(), ...pads];
-  });
-  protected readonly rangeLabel = computed(() => {
-    const total = this.total();
-    if (total === 0) return '0-0 de 0';
-    const start = this.currentPage() * this.pageSize() + 1;
-    return `${start}-${Math.min(start + this.pageSize() - 1, total)} de ${total}`;
-  });
+  protected readonly tableRows = computed(() => this.items().map((item) => ({
+    id: item.id,
+    name: item.name,
+    moduleName: item.moduleName,
+    permissions: item.permissions,
+    enabled: item.enabled,
+  })));
 
   ngOnInit(): void {
     void this.load();
   }
 
-  protected onName(event: Event): void {
-    this.editorName.set((event.target as HTMLInputElement).value);
+  protected onCrumb(action: string): void {
+    if (action === 'list') this.closeEditor();
   }
 
-  protected onSearch(event: Event): void {
-    this.search.set((event.target as HTMLInputElement).value);
+  protected onName(value: string): void {
+    this.editorName.set(value);
+  }
+
+  protected onSearch(value: string): void {
+    this.search.set(value);
     this.page.set(0);
     void this.load();
   }
 
-  protected changePageSize(event: Event): void {
-    const value = Number((event.target as HTMLSelectElement).value);
-    if (value === 5 || value === 10 || value === 20) {
-      this.pageSize.set(value);
-      this.page.set(0);
-      void this.load();
-    }
+  protected onTablePage(event: UiTablePageChange): void {
+    if (event.pageSize !== 5 && event.pageSize !== 10 && event.pageSize !== 20) return;
+    if (event.page === this.page() && event.pageSize === this.pageSize()) return;
+    this.pageSize.set(event.pageSize);
+    this.page.set(event.page);
+    void this.load();
   }
 
-  protected changePage(next: number): void {
-    const page = Math.min(Math.max(next, 0), this.pageCount() - 1);
-    if (page === this.currentPage()) return;
-    this.page.set(page);
-    void this.load();
+  protected editFromTable(row: UiTableRow): void {
+    const current = this.items().find((item) => item.id === row['id']);
+    if (current) this.beginEdit(current);
+  }
+
+  protected toggleFromTable(row: UiTableRow): void {
+    if (typeof row['id'] === 'string') void this.toggle(row['id']);
+  }
+
+  protected removeFromTable(row: UiTableRow): void {
+    if (typeof row['id'] === 'string') this.remove(row['id']);
   }
 
   protected beginCreate(): void {

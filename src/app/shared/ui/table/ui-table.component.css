@@ -156,8 +156,6 @@ tbody tr:hover {
   padding: 0;
   place-items: center;
   color: #777;
-  font-size: 1.75rem;
-  line-height: 1;
   cursor: pointer;
   border: 0;
   border-radius: 0.25rem;
@@ -172,6 +170,44 @@ tbody tr:hover {
 .table-card__pagination button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+
+.table-card__actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.table-card__switch {
+  position: relative;
+  display: inline-flex;
+  width: 2.75rem;
+  height: 1.5rem;
+  padding: 0;
+  cursor: pointer;
+  border: 0;
+  border-radius: 999px;
+  background: #d7d1d2;
+}
+
+.table-card__switch[aria-checked='true'] {
+  background: #d0123a;
+}
+
+.table-card__switch span {
+  position: absolute;
+  top: 0.125rem;
+  left: 0.125rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: white;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+  transition: transform 150ms ease;
+}
+
+.table-card__switch-knob--on {
+  transform: translateX(1.25rem);
 }
 
 .table-card__sr-only {

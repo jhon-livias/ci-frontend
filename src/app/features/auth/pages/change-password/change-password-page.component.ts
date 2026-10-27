@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthApiService } from '../../../../core/auth/auth-api.service';
 import { AuthSessionService } from '../../../../core/auth/auth-session.service';
 import { AuthLayoutComponent } from '../../../../layouts/auth-layout/auth-layout.component';
+import { AlertTone, UiAlertComponent } from '../../../../shared/ui/alert/ui-alert.component';
 import { UiButtonComponent } from '../../../../shared/ui/button/ui-button.component';
 import { UiFieldComponent } from '../../../../shared/ui/field/ui-field.component';
 
@@ -14,7 +15,7 @@ interface PasswordChange {
 }
 
 @Component({
-  imports: [FormField, FormRoot, UiButtonComponent, UiFieldComponent, AuthLayoutComponent],
+  imports: [FormField, FormRoot, UiAlertComponent, UiButtonComponent, UiFieldComponent, AuthLayoutComponent],
   templateUrl: './change-password-page.component.html',
 })
 export class ChangePasswordPageComponent {
@@ -27,22 +28,22 @@ export class ChangePasswordPageComponent {
     minLength(path.password, 8, { message: 'La contraseña debe tener al menos 8 caracteres.' });
     required(path.confirmation, { message: 'Confirma la nueva contraseña.' });
   });
-  protected readonly notice = signal<string | null>(null);
+  protected readonly notice = signal<{ text: string; tone: AlertTone } | null>(null);
   protected readonly isSubmitting = signal(false);
 
   protected async submit(): Promise<void> {
     this.passwordForm().markAsTouched();
     if (this.passwordForm().invalid()) {
-      this.notice.set('Revisa los datos marcados para continuar.');
+      this.notice.set({ text: 'Revisa los datos marcados para continuar.', tone: 'warning' });
       return;
     }
     const { password, confirmation } = this.values();
     if (password !== confirmation) {
-      this.notice.set('Las contraseñas no coinciden.');
+      this.notice.set({ text: 'Las contraseñas no coinciden.', tone: 'warning' });
       return;
     }
     if (/[<>]/.test(password) || password.length > 72) {
-      this.notice.set('La contraseña debe tener entre 8 y 72 caracteres.');
+      this.notice.set({ text: 'La contraseña debe tener entre 8 y 72 caracteres.', tone: 'warning' });
       return;
     }
     this.notice.set(null);
@@ -52,7 +53,7 @@ export class ChangePasswordPageComponent {
       this.session.passwordChanged();
       await this.router.navigateByUrl('/inicio');
     } catch {
-      this.notice.set('No se pudo cambiar la contraseña. Inténtalo nuevamente.');
+      this.notice.set({ text: 'No se pudo cambiar la contraseña. Inténtalo nuevamente.', tone: 'error' });
     } finally {
       this.isSubmitting.set(false);
     }

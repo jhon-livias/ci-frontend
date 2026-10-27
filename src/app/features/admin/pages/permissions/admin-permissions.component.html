@@ -1,12 +1,8 @@
 @if (editingId()) {
-  <p class="text-xs text-[#8d98a3]">Inicio / Permisos / <span class="text-[#3a3334]">Editar permiso</span></p>
-  <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
-    <div class="flex flex-wrap items-baseline gap-4">
-      <h1 class="font-[var(--font-heading)] text-[1.65rem] font-bold tracking-wide text-[#a9002d]">PERMISO</h1>
-      <p class="text-2xl font-semibold text-[#3a3334]">{{ editingName() }}</p>
-    </div>
-    <button class="rounded-full bg-[#a9002d] px-8 py-2.5 text-sm font-semibold text-white" type="button" (click)="closeEditor()">Volver</button>
-  </div>
+  <ui-page-header [items]="editorCrumbs" title="Permiso" (activate)="onCrumb($event)">
+    <p data-page-aside class="text-2xl font-semibold text-[#3a3334]">{{ editingName() }}</p>
+    <ui-button type="button" (click)="closeEditor()">Volver</ui-button>
+  </ui-page-header>
   @if (message()) {
     <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
   }
@@ -51,52 +47,31 @@
         }
       </ul>
     </article>
-    <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+    <div class="mt-8 flex flex-wrap justify-end gap-4">
       <button class="rounded-full border border-[#c4002f] px-10 py-2.5 text-sm font-semibold text-[#c4002f]" type="button" (click)="closeEditor()">Cancelar</button>
       <button class="rounded-full bg-[#4e463f] px-10 py-2.5 text-sm font-semibold text-white disabled:opacity-60" type="button" [disabled]="saving()" (click)="saveFeatures()">Guardar</button>
     </div>
   </section>
 } @else {
-<p class="text-xs text-[#8d98a3]">Inicio / Permisos</p>
-<div class="mt-4 flex flex-wrap items-center justify-between gap-4">
-  <h1 class="font-[var(--font-heading)] text-[1.65rem] font-bold tracking-wide text-[#a9002d]">PERMISOS</h1>
+<ui-page-header [items]="listCrumbs" title="Permisos">
   @if (editorOpen()) {
-    <button class="rounded-full bg-[#a9002d] px-8 py-2.5 text-sm font-semibold text-white" type="button" (click)="closeEditor()">Volver</button>
+    <ui-button type="button" (click)="closeEditor()">Volver</ui-button>
   } @else {
     <ui-button type="button" (click)="beginCreate()">Agregar permiso</ui-button>
   }
-</div>
+</ui-page-header>
 @if (message()) {
   <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
 }
 
-<div class="mt-6 flex flex-col gap-4 lg:flex-row lg:items-center">
-  <label class="min-w-0 flex-1">
-    <span class="sr-only">Buscar permisos</span>
-    <input
-      class="h-11 w-full rounded-md border border-[#d5d0d1] bg-white px-4 text-sm text-[#1e1e1e] outline-none placeholder:text-[#b0b0b0] focus-visible:border-[#a9002d]"
-      type="search"
-      placeholder="Search"
-      [value]="search()"
-      (input)="onSearch($event)"
-    />
-  </label>
-  <label class="relative block w-full lg:w-64">
-    <span class="sr-only">Módulo</span>
-    <select
-      class="h-11 w-full appearance-none rounded-md border border-[#d5d0d1] bg-white px-4 pr-10 text-sm text-[#1e1e1e] outline-none focus-visible:border-[#a9002d]"
-      [value]="moduleId()"
-      (change)="onModule($event)"
-    >
-      @for (module of modules(); track module.value) {
-        <option [value]="module.value">{{ module.label }}</option>
-      }
-    </select>
-    <svg aria-hidden="true" class="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-[#6d6d6d]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-      <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
-  </label>
-</div>
+<ui-filter-bar>
+  <div class="w-full min-w-56 max-w-md flex-1">
+    <ui-field id="permission-search" label="Buscar permiso" type="search" [value]="search()" (valueChange)="onSearch($event)" />
+  </div>
+  <div class="w-full min-w-44 max-w-xs flex-1">
+    <ui-select id="permission-module" label="Módulo" [options]="modules()" [searchable]="false" [value]="moduleId()" (valueChange)="onModule($event)" />
+  </div>
+</ui-filter-bar>
 
 @if (editorOpen()) {
   <form [formRoot]="permissionForm" class="mt-4 grid gap-4 rounded-2xl bg-white p-5 shadow-sm md:grid-cols-2" novalidate (submit)="saveEditor($event)">
@@ -109,117 +84,21 @@
   </form>
 }
 
-<section class="mt-8 overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgb(30_30_30_/_8%)]" aria-label="Permisos">
-  <div class="overflow-x-auto px-6 pt-4 sm:px-10">
-    <table class="w-full min-w-[40rem] border-collapse text-sm text-[#1e1e1e]">
-      <thead>
-        <tr class="border-b border-[#ece6e7] text-center font-bold">
-          <th class="h-12 px-4 font-bold" scope="col">Permisos</th>
-          <th class="h-12 px-4 font-bold" scope="col">Funcionalidades</th>
-          <th class="h-12 px-4 font-bold" scope="col">Estado</th>
-          <th class="h-12 px-4 font-bold" scope="col">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (row of visibleRows(); track row.id; let index = $index) {
-          <tr class="border-b border-[#ece6e7] text-center" [class.bg-[#f6f3f4]]="!row.placeholder && index % 2 === 1">
-            <td class="h-14 px-4">{{ row.name }}</td>
-            <td class="h-14 px-4">{{ row.features }}</td>
-            <td class="h-14 px-4">
-              @if (!row.placeholder) {
-                <button
-                  class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
-                  [class.bg-[#d0123a]]="row.enabled"
-                  [class.bg-[#d7d1d2]]="!row.enabled"
-                  type="button"
-                  role="switch"
-                  [attr.aria-checked]="row.enabled"
-                  [attr.aria-label]="'Estado de ' + row.name"
-                  (click)="toggle(row.id)"
-                >
-                  <span
-                    class="inline-block size-5 rounded-full bg-white shadow transition-transform"
-                    [class.translate-x-5]="row.enabled"
-                    [class.translate-x-0.5]="!row.enabled"
-                  ></span>
-                </button>
-              }
-            </td>
-            <td class="h-14 px-4">
-              @if (!row.placeholder) {
-                <div class="flex items-center justify-center gap-2">
-                  <button
-                    class="grid size-8 place-items-center rounded-md bg-[#3d3536] text-white"
-                    type="button"
-                    [attr.aria-label]="'Editar ' + row.name"
-                    (click)="beginEdit(row)"
-                  >
-                    <svg aria-hidden="true" class="size-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                      <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17z" stroke-linejoin="round" />
-                      <path d="m13.5 6.5 3 3" stroke-linecap="round" />
-                    </svg>
-                  </button>
-                  <button
-                    class="grid size-8 place-items-center rounded-md bg-[#c4002f] text-white"
-                    type="button"
-                    [attr.aria-label]="'Eliminar ' + row.name"
-                    (click)="remove(row.id)"
-                  >
-                    <svg aria-hidden="true" class="size-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                      <path d="M5 7h14M9 7V5h6v2M8 7l1 12h6l1-12" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                  </button>
-                </div>
-              }
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-
-  <footer class="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 px-6 py-8 text-sm text-[#2b2b2b]">
-    <label class="flex items-center gap-3">
-      <span>Items por pagina:</span>
-      <span class="relative">
-        <select
-          class="h-10 appearance-none rounded-md border border-[#d0d0d0] bg-white pr-8 pl-3 text-sm"
-          aria-label="Items por pagina"
-          [value]="pageSize()"
-          (change)="changePageSize($event)"
-        >
-          @for (size of pageSizeOptions; track size) {
-            <option [value]="size">{{ size }}</option>
-          }
-        </select>
-        <svg aria-hidden="true" class="pointer-events-none absolute top-1/2 right-2 size-3.5 -translate-y-1/2 text-[#666]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-          <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </span>
-    </label>
-    <p class="m-0">{{ rangeLabel() }}</p>
-    <div class="flex items-center gap-1" aria-label="Paginación">
-      <button
-        class="grid size-8 place-items-center text-2xl leading-none text-[#8a8a8a] disabled:opacity-40"
-        type="button"
-        aria-label="Página anterior"
-        [disabled]="currentPage() === 0"
-        (click)="changePage(currentPage() - 1)"
-      >
-        ‹
-      </button>
-      <button
-        class="grid size-8 place-items-center text-2xl leading-none text-[#8a8a8a] disabled:opacity-40"
-        type="button"
-        aria-label="Página siguiente"
-        [disabled]="currentPage() >= pageCount() - 1"
-        (click)="changePage(currentPage() + 1)"
-      >
-        ›
-      </button>
-    </div>
-  </footer>
-</section>
+<div class="mt-8">
+  <ui-table
+    [actions]="true"
+    [columns]="columns"
+    [rows]="tableRows()"
+    [totalItems]="total()"
+    [pageIndex]="page()"
+    [selectedPageSize]="pageSize()"
+    emptyMessage="No se encontraron permisos."
+    (pageChange)="onTablePage($event)"
+    (edit)="editFromTable($event)"
+    (remove)="removeFromTable($event)"
+    (toggle)="toggleFromTable($event)"
+  />
+</div>
 }
 @if (confirmation(); as dialog) {
   <ui-confirm [message]="dialog.message" [details]="dialog.details" (confirmed)="acceptConfirmation()" (cancelled)="cancelConfirmation()" />

@@ -1,88 +1,29 @@
-<h1 class="font-[var(--font-heading)] text-[1.65rem] font-bold tracking-wide text-[#a9002d]">HISTORIAL</h1>
-<p class="mt-2 text-sm text-[#7c8691]">Registro de acciones de los usuarios</p>
+<ui-page-header [items]="crumbs" title="Historial" description="Registro de acciones de los usuarios" />
 @if (message()) {
   <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
 }
-<div class="mt-6 flex flex-wrap items-center gap-3">
-  <label class="min-w-64 flex-1 max-w-md">
-    <span class="sr-only">Buscar historial</span>
-    <input
-      class="h-11 w-full rounded-md border border-[#d5d0d1] bg-white px-4 text-sm text-[#1e1e1e] outline-none placeholder:text-[#b0b0b0] focus-visible:border-[#a9002d]"
-      type="search"
-      placeholder="Search"
-      [value]="search()"
-      (input)="onSearch($event)"
-    />
-  </label>
-  <label class="relative">
-    <span class="sr-only">Rol</span>
-    <select class="h-11 appearance-none rounded-md border border-[#d5d0d1] bg-white pr-9 pl-4 text-sm text-[#1e1e1e]" [value]="role()" (change)="onRole($event)">
-      <option value="">Rol</option>
-      @for (item of roles(); track item) {
-        <option [value]="item">{{ item }}</option>
-      }
-    </select>
-    <svg aria-hidden="true" class="pointer-events-none absolute top-1/2 right-3 size-3.5 -translate-y-1/2 text-[#666]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-      <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
-  </label>
-  <label class="relative">
-    <span class="sr-only">Módulo</span>
-    <select class="h-11 appearance-none rounded-md border border-[#d5d0d1] bg-white pr-9 pl-4 text-sm text-[#1e1e1e]" [value]="module()" (change)="onModule($event)">
-      <option value="">Módulo</option>
-      @for (item of modules(); track item) {
-        <option [value]="item">{{ item }}</option>
-      }
-    </select>
-    <svg aria-hidden="true" class="pointer-events-none absolute top-1/2 right-3 size-3.5 -translate-y-1/2 text-[#666]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-      <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
-  </label>
-</div>
-
-<section class="mt-6 overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgb(30_30_30_/_8%)]" aria-label="Historial">
-  <div class="overflow-x-auto px-6 pt-4 sm:px-10">
-    <table class="w-full min-w-[52rem] border-collapse text-center text-sm text-[#1e1e1e]">
-      <thead>
-        <tr class="border-b border-[#ece6e7] font-bold">
-          <th class="h-12 px-3 font-bold" scope="col"><button class="inline-flex items-center gap-1" type="button" (click)="changeSort('occurredAt')">Fecha y hora <svg aria-hidden="true" class="size-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="m8 9 4-4 4 4M8 15l4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg></button></th>
-          <th class="h-12 px-3 font-bold" scope="col"><button class="inline-flex items-center gap-1" type="button" (click)="changeSort('actorName')">Usuario <svg aria-hidden="true" class="size-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="m8 9 4-4 4 4M8 15l4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg></button></th>
-          <th class="h-12 px-3 font-bold" scope="col"><button class="inline-flex items-center gap-1" type="button" (click)="changeSort('actorRole')">Rol <svg aria-hidden="true" class="size-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="m8 9 4-4 4 4M8 15l4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg></button></th>
-          <th class="h-12 px-3 font-bold" scope="col"><button class="inline-flex items-center gap-1" type="button" (click)="changeSort('module')">Módulo <svg aria-hidden="true" class="size-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="m8 9 4-4 4 4M8 15l4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg></button></th>
-          <th class="h-12 px-3 font-bold" scope="col"><button class="inline-flex items-center gap-1" type="button" (click)="changeSort('action')">Acción <svg aria-hidden="true" class="size-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="m8 9 4-4 4 4M8 15l4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg></button></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (row of visibleRows(); track row.id; let index = $index) {
-          <tr class="border-b border-[#ece6e7]" [class.bg-[#f6f3f4]]="!row.placeholder && index % 2 === 1">
-            <td class="h-14 px-3">{{ row.placeholder ? '' : formatWhen(row.occurredAt) }}</td>
-            <td class="h-14 px-3">{{ row.placeholder ? '' : row.actorName }}</td>
-            <td class="h-14 px-3">{{ row.placeholder ? '' : row.actorRole }}</td>
-            <td class="h-14 px-3">{{ row.placeholder ? '' : row.module }}</td>
-            <td class="h-14 px-3">{{ row.placeholder ? '' : row.action }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
+<ui-filter-bar>
+  <div class="w-full min-w-56 max-w-md flex-1">
+    <ui-field id="history-search" label="Buscar historial" type="search" [value]="search()" (valueChange)="onSearch($event)" />
   </div>
-  <footer class="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 px-6 py-8 text-sm text-[#2b2b2b]">
-    <label class="flex items-center gap-3">
-      <span>Items por pagina:</span>
-      <span class="relative">
-        <select class="h-10 appearance-none rounded-md border border-[#d0d0d0] bg-white pr-8 pl-3 text-sm" aria-label="Items por pagina" [value]="pageSize()" (change)="changePageSize($event)">
-          @for (size of pageSizeOptions; track size) {
-            <option [value]="size">{{ size }}</option>
-          }
-        </select>
-        <svg aria-hidden="true" class="pointer-events-none absolute top-1/2 right-2 size-3.5 -translate-y-1/2 text-[#666]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-          <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </span>
-    </label>
-    <p class="m-0">{{ rangeLabel() }}</p>
-    <div class="flex items-center gap-1" aria-label="Paginación">
-      <button class="grid size-8 place-items-center text-2xl leading-none text-[#8a8a8a] disabled:opacity-40" type="button" aria-label="Página anterior" [disabled]="currentPage() === 0" (click)="changePage(currentPage() - 1)">‹</button>
-      <button class="grid size-8 place-items-center text-2xl leading-none text-[#8a8a8a] disabled:opacity-40" type="button" aria-label="Página siguiente" [disabled]="currentPage() >= pageCount() - 1" (click)="changePage(currentPage() + 1)">›</button>
-    </div>
-  </footer>
-</section>
+  <div class="w-full min-w-44 max-w-xs flex-1">
+    <ui-select id="history-role" label="Rol" [options]="roleOptions()" [searchable]="false" [value]="role()" (valueChange)="onRole($event)" />
+  </div>
+  <div class="w-full min-w-44 max-w-xs flex-1">
+    <ui-select id="history-module" label="Módulo" [options]="moduleOptions()" [searchable]="false" [value]="module()" (valueChange)="onModule($event)" />
+  </div>
+</ui-filter-bar>
+
+<div class="mt-6">
+  <ui-table
+    [columns]="columns"
+    [rows]="tableRows()"
+    [totalItems]="total()"
+    [pageIndex]="page()"
+    [selectedPageSize]="pageSize()"
+    [sortState]="tableSort()"
+    emptyMessage="No hay movimientos para mostrar."
+    (sortChange)="onTableSort($event)"
+    (pageChange)="onTablePage($event)"
+  />
+</div>

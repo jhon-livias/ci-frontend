@@ -1,0 +1,46 @@
+<section class="space-y-6" aria-labelledby="catalog-title">
+  <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#a9002d]">Administración</p>
+      <h1 id="catalog-title" class="mt-2 font-[var(--font-heading)] text-2xl font-semibold text-[#1e1e1e] sm:text-3xl">
+        {{ definition().title }}
+      </h1>
+      <p class="mt-2 max-w-2xl text-sm leading-6 text-[#5e5254]">{{ definition().description }}</p>
+    </div>
+    <button
+      class="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#a9002d] px-4 text-sm font-semibold text-white opacity-55"
+      type="button"
+      disabled
+      title="Disponible al conectar el API administrativo"
+    >
+      Nuevo {{ singularLabel() }}
+    </button>
+  </header>
+
+  @if (definition().helper) {
+    <p class="rounded-lg border border-[#d5b8bf] bg-[#faf6f7] px-4 py-3 text-sm text-[#5e5254]" role="status">
+      {{ definition().helper }}
+    </p>
+  }
+
+      <div class="max-w-xl">
+        <ui-field
+          id="catalog-search"
+          label="Buscar"
+          type="search"
+          [placeholder]="'Buscar en ' + definition().title.toLowerCase()"
+          [value]="search()"
+          (valueChange)="updateSearch($event)"
+        />
+      </div>
+
+  <ui-table
+    [columns]="definition().columns"
+    [rows]="filteredRows()"
+    [emptyMessage]="'No hay ' + definition().title.toLowerCase() + ' para mostrar.'"
+  />
+
+  <p class="text-xs leading-5 text-[#7c8691]">
+    Vista de consulta. Las operaciones de alta, edición, activación y eliminación requieren el API administrativo con autorización de servidor.
+  </p>
+</section>

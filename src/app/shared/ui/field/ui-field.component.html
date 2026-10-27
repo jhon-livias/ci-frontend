@@ -8,6 +8,7 @@
   <div class="field__control-wrap">
     <input
       class="field__control"
+      [class.field__control--invalid]="!!message()"
       [class.field__control--with-toggle]="showPasswordToggle() && type() === 'password'"
       [attr.aria-describedby]="hint() || message() ? id() + '-description' : null"
       [attr.aria-invalid]="message() ? 'true' : null"

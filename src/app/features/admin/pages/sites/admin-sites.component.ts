@@ -4,11 +4,13 @@ import { SitesService, type Site } from '../../data-access/sites.service';
 import { UiButtonComponent } from '../../../../shared/ui/button/ui-button.component';
 import { UiConfirmComponent, type UiConfirmDetail } from '../../../../shared/ui/confirm/ui-confirm.component';
 import { UiFieldComponent } from '../../../../shared/ui/field/ui-field.component';
+import { UiFilterBarComponent } from '../../../../shared/ui/filter-bar/ui-filter-bar.component';
+import { UiPageHeaderComponent, type UiBreadcrumbItem } from '../../../../shared/ui/page-header/ui-page-header.component';
 import { UiTableComponent, type UiTableColumn, type UiTableRow } from '../../../../shared/ui/table/ui-table.component';
 
 @Component({
   selector: 'app-admin-sites',
-  imports: [UiButtonComponent, UiConfirmComponent, UiFieldComponent, UiTableComponent],
+  imports: [UiButtonComponent, UiConfirmComponent, UiFieldComponent, UiFilterBarComponent, UiPageHeaderComponent, UiTableComponent],
   templateUrl: './admin-sites.component.html',
 })
 export class AdminSitesComponent implements OnInit {
@@ -19,6 +21,7 @@ export class AdminSitesComponent implements OnInit {
   protected readonly message = signal('');
   protected readonly confirmation = signal<{ message: string; details: readonly UiConfirmDetail[]; run: () => Promise<void> } | null>(null);
   protected readonly search = signal('');
+  protected readonly crumbs: readonly UiBreadcrumbItem[] = [{ label: 'Inicio' }, { label: 'Sedes' }];
   protected readonly columns: readonly UiTableColumn[] = [{ key: 'code', label: 'Código', sortable: true }, { key: 'name', label: 'Nombre', sortable: true }, { key: 'location', label: 'Ubicación', sortable: true }, { key: 'status', label: 'Estado', sortable: true }];
   protected readonly rows = computed<readonly UiTableRow[]>(() => {
     const q = this.search().trim().toLocaleLowerCase('es');

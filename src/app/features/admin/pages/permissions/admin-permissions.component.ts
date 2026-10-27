@@ -4,6 +4,10 @@ import { FormField, FormRoot, form, required } from '@angular/forms/signals';
 import { UiButtonComponent } from '../../../../shared/ui/button/ui-button.component';
 import { UiConfirmComponent, type UiConfirmDetail } from '../../../../shared/ui/confirm/ui-confirm.component';
 import { UiFieldComponent } from '../../../../shared/ui/field/ui-field.component';
+import { UiFilterBarComponent } from '../../../../shared/ui/filter-bar/ui-filter-bar.component';
+import { UiPageHeaderComponent, type UiBreadcrumbItem } from '../../../../shared/ui/page-header/ui-page-header.component';
+import { UiSelectComponent } from '../../../../shared/ui/select/ui-select.component';
+import { UiTableComponent, type UiTableColumn, type UiTablePageChange, type UiTableRow } from '../../../../shared/ui/table/ui-table.component';
 import { PermissionCatalogService } from '../../data-access/permission-catalog.service';
 
 interface PermissionFeature {
@@ -27,17 +31,27 @@ interface PermissionModuleOption {
 
 @Component({
   selector: 'app-admin-permissions',
-  imports: [FormField, FormRoot, UiButtonComponent, UiConfirmComponent, UiFieldComponent],
+  imports: [FormField, FormRoot, UiButtonComponent, UiConfirmComponent, UiFieldComponent, UiFilterBarComponent, UiPageHeaderComponent, UiSelectComponent, UiTableComponent],
   templateUrl: './admin-permissions.component.html',
 })
 export class AdminPermissionsComponent implements OnInit {
   private readonly catalog = inject(PermissionCatalogService);
-  protected readonly pageSizeOptions = [5, 10, 20] as const;
+  protected readonly columns: readonly UiTableColumn[] = [
+    { key: 'name', label: 'Permisos' },
+    { key: 'features', label: 'Funcionalidades' },
+    { key: 'enabled', label: 'Estado', kind: 'switch', align: 'center' },
+  ];
+  protected readonly listCrumbs: readonly UiBreadcrumbItem[] = [{ label: 'Inicio' }, { label: 'Permisos' }];
+  protected readonly editorCrumbs: readonly UiBreadcrumbItem[] = [
+    { label: 'Inicio', action: 'list' },
+    { label: 'Permisos', action: 'list' },
+    { label: 'Editar permiso' },
+  ];
   protected readonly modules = signal<readonly PermissionModuleOption[]>([{ value: 'estudiante', label: 'Estudiante' }]);
   protected readonly search = signal('');
   protected readonly moduleId = signal('estudiante');
   protected readonly page = signal(0);
-  protected readonly pageSize = signal<(typeof this.pageSizeOptions)[number]>(5);
+  protected readonly pageSize = signal<5 | 10 | 20>(5);
   protected readonly total = signal(0);
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
@@ -53,61 +67,53 @@ export class AdminPermissionsComponent implements OnInit {
     required(path.features, { message: 'Ingresa las funcionalidades.' });
   });
   private readonly items = signal<readonly PermissionRow[]>([]);
-
-  protected readonly pageCount = computed(() => Math.max(1, Math.ceil(this.total() / this.pageSize())));
-  protected readonly currentPage = computed(() => Math.min(this.page(), this.pageCount() - 1));
-  protected readonly visibleRows = computed(() => {
-    const size = this.pageSize();
-    const missing = Math.max(0, size - this.items().length);
-    const pads = Array.from({ length: missing }, (_, index): PermissionRow => ({
-      id: `vacio-${this.currentPage()}-${index}`,
-      name: '',
-      features: '',
-      functionalities: [],
-      enabled: false,
-      placeholder: true,
-    }));
-    return [...this.items(), ...pads];
-  });
+  protected readonly tableRows = computed(() => this.items().map((item) => ({
+    id: item.id,
+    name: item.name,
+    features: item.features,
+    enabled: item.enabled,
+  })));
   protected readonly allFeaturesOn = computed(() => this.editorFeatures().length > 0 && this.editorFeatures().every((item) => item.enabled));
-  protected readonly rangeLabel = computed(() => {
-    const total = this.total();
-    if (total === 0) return '0-0 de 0';
-    const start = this.currentPage() * this.pageSize() + 1;
-    const end = Math.min(start + this.pageSize() - 1, total);
-    return `${start}-${end} de ${total}`;
-  });
 
   ngOnInit(): void {
     void this.load();
   }
 
-  protected onSearch(event: Event): void {
-    this.search.set((event.target as HTMLInputElement).value);
+  protected onCrumb(action: string): void {
+    if (action === 'list') this.closeEditor();
+  }
+
+  protected onSearch(value: string): void {
+    this.search.set(value);
     this.page.set(0);
     void this.load();
   }
 
-  protected onModule(event: Event): void {
-    this.moduleId.set((event.target as HTMLSelectElement).value);
+  protected onModule(value: string): void {
+    this.moduleId.set(value);
     this.page.set(0);
     void this.load();
   }
 
-  protected changePageSize(event: Event): void {
-    const value = Number((event.target as HTMLSelectElement).value);
-    if (value === 5 || value === 10 || value === 20) {
-      this.pageSize.set(value);
-      this.page.set(0);
-      void this.load();
-    }
+  protected onTablePage(event: UiTablePageChange): void {
+    if (event.pageSize !== 5 && event.pageSize !== 10 && event.pageSize !== 20) return;
+    if (event.page === this.page() && event.pageSize === this.pageSize()) return;
+    this.pageSize.set(event.pageSize);
+    this.page.set(event.page);
+    void this.load();
   }
 
-  protected changePage(next: number): void {
-    const page = Math.min(Math.max(next, 0), this.pageCount() - 1);
-    if (page === this.currentPage()) return;
-    this.page.set(page);
-    void this.load();
+  protected editFromTable(row: UiTableRow): void {
+    const current = this.items().find((item) => item.id === row['id']);
+    if (current) this.beginEdit(current);
+  }
+
+  protected toggleFromTable(row: UiTableRow): void {
+    if (typeof row['id'] === 'string') void this.toggle(row['id']);
+  }
+
+  protected removeFromTable(row: UiTableRow): void {
+    if (typeof row['id'] === 'string') this.remove(row['id']);
   }
 
   protected beginCreate(): void {

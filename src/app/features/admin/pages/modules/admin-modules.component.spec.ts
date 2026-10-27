@@ -33,14 +33,16 @@ describe('AdminModulesComponent', () => {
     fixture.detectChanges();
     const text = fixture.nativeElement.textContent as string;
 
-    expect(text).toContain('MÓDULOS');
+    expect(text).toContain('Inicio / Módulos');
+    expect(text).toContain('Módulos');
+    expect(text).toContain('Buscar módulo');
     expect(text).toContain('Docente');
     expect(text).toContain('197');
     expect(text).toContain('132');
     expect(text).toContain('65');
     expect(text).toContain('Alumnos');
     expect(text).toContain('3679');
-    expect(text).toContain('Items por pagina:');
+    expect(text).toContain('Elementos por página:');
     expect(text).toContain('1-2 de 2');
   });
 

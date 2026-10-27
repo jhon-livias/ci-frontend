@@ -1,5 +1,7 @@
 import { Component, ElementRef, computed, input, model, signal, viewChild } from '@angular/core';
 
+import { UiIconComponent } from '../icon/ui-icon.component';
+
 export interface UiSelectOption {
   readonly label: string;
   readonly value: string;
@@ -8,6 +10,7 @@ export interface UiSelectOption {
 
 @Component({
   selector: 'ui-select',
+  imports: [UiIconComponent],
   templateUrl: './ui-select.component.html',
   styleUrl: './ui-select.component.css',
 })
@@ -19,6 +22,7 @@ export class UiSelectComponent {
   readonly disabled = input(false);
   readonly required = input(false);
   readonly searchable = input(true);
+  readonly error = input<string>();
   readonly value = model('');
   protected readonly open = signal(false);
   protected readonly query = signal('');

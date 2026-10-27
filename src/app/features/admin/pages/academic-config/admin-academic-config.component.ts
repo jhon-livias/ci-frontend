@@ -1,10 +1,14 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormField, FormRoot, form, required } from '@angular/forms/signals';
 
 import { AcademicConfigService, type AcademicCatalog, type AcademicCatalogKind, type AcademicRules } from '../../data-access/academic-config.service';
 import { UiButtonComponent } from '../../../../shared/ui/button/ui-button.component';
 import { UiConfirmComponent, type UiConfirmDetail } from '../../../../shared/ui/confirm/ui-confirm.component';
 import { UiFieldComponent } from '../../../../shared/ui/field/ui-field.component';
+import { UiFilterBarComponent } from '../../../../shared/ui/filter-bar/ui-filter-bar.component';
+import { UiPageHeaderComponent, type UiBreadcrumbItem } from '../../../../shared/ui/page-header/ui-page-header.component';
+import { UiSelectComponent, type UiSelectOption } from '../../../../shared/ui/select/ui-select.component';
+import { UiTableComponent, type UiTableColumn } from '../../../../shared/ui/table/ui-table.component';
 
 interface RulesForm {
   minStudents: string;
@@ -26,11 +30,21 @@ const emptyRules = (): RulesForm => ({
 
 @Component({
   selector: 'app-admin-academic-config',
-  imports: [FormField, FormRoot, UiButtonComponent, UiConfirmComponent, UiFieldComponent],
+  imports: [FormField, FormRoot, UiButtonComponent, UiConfirmComponent, UiFieldComponent, UiFilterBarComponent, UiPageHeaderComponent, UiSelectComponent, UiTableComponent],
   templateUrl: './admin-academic-config.component.html',
 })
 export class AdminAcademicConfigComponent implements OnInit {
   private readonly api = inject(AcademicConfigService);
+  protected readonly crumbs: readonly UiBreadcrumbItem[] = [{ label: 'Inicio' }, { label: 'Configuración académica' }];
+  protected readonly scheduleColumns: readonly UiTableColumn[] = [
+    { key: 'number', label: 'Nro de horario', sortable: true },
+    { key: 'day', label: 'Día', sortable: true },
+    { key: 'classType', label: 'Tipo de clase', sortable: true },
+    { key: 'hours', label: 'Horas', sortable: true },
+    { key: 'owner', label: 'Responsable', sortable: true },
+  ];
+  protected readonly query = signal('');
+  protected readonly catalogFilter = signal('');
   protected readonly catalogs = signal<readonly AcademicCatalog[]>([]);
   protected readonly schedules = signal<readonly { number: number; day: string; classType: string; hours: string; owner: string }[]>([]);
   protected readonly drafts = signal<Readonly<Record<AcademicCatalogKind, string>>>({
@@ -43,6 +57,34 @@ export class AdminAcademicConfigComponent implements OnInit {
   protected readonly message = signal('');
   protected readonly confirmation = signal<{ message: string; details: readonly UiConfirmDetail[]; run: () => Promise<void> } | null>(null);
   protected readonly values = signal<RulesForm>(emptyRules());
+  protected readonly catalogFilterOptions = computed<readonly UiSelectOption[]>(() => [
+    { value: '', label: 'Todos los catálogos' },
+    ...this.catalogs().map((catalog) => ({ value: catalog.kind, label: catalog.title })),
+  ]);
+  protected readonly visibleCatalogs = computed(() => {
+    const kind = this.catalogFilter();
+    const q = this.query().trim().toLocaleLowerCase('es');
+    return this.catalogs()
+      .filter((catalog) => !kind || catalog.kind === kind)
+      .map((catalog) => {
+        if (!q || catalog.title.toLocaleLowerCase('es').includes(q)) return catalog;
+        return { ...catalog, items: catalog.items.filter((item) => item.name.toLocaleLowerCase('es').includes(q)) };
+      })
+      .filter((catalog) => !q || catalog.title.toLocaleLowerCase('es').includes(q) || catalog.items.length > 0);
+  });
+  protected readonly visibleSchedules = computed(() => {
+    const q = this.query().trim().toLocaleLowerCase('es');
+    if (!q) return this.schedules();
+    return this.schedules().filter((row) => `${row.number} ${row.day} ${row.classType} ${row.hours} ${row.owner}`.toLocaleLowerCase('es').includes(q));
+  });
+  protected readonly scheduleRows = computed(() => this.visibleSchedules().map((row) => ({
+    number: row.number,
+    day: row.day,
+    classType: row.classType,
+    hours: row.hours,
+    owner: row.owner,
+  })));
+  protected readonly scheduleEmpty = computed(() => this.query().trim() ? 'No se encontraron combos horarios.' : 'Aún no hay combos horarios.');
   protected readonly rulesForm = form(this.values, (path) => {
     required(path.minStudents, { message: 'Ingresa el mínimo de alumnos.' });
     required(path.maxStudents, { message: 'Ingresa el máximo de alumnos.' });
@@ -56,8 +98,7 @@ export class AdminAcademicConfigComponent implements OnInit {
     void this.load();
   }
 
-  protected onDraft(kind: AcademicCatalogKind, event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
+  protected onDraft(kind: AcademicCatalogKind, value: string): void {
     this.drafts.update((current) => ({ ...current, [kind]: value }));
   }
 

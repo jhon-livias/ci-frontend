@@ -5,11 +5,12 @@ import { SitesService, type SiteDetail } from '../../data-access/sites.service';
 import { UiButtonComponent } from '../../../../shared/ui/button/ui-button.component';
 import { UiConfirmComponent, type UiConfirmDetail } from '../../../../shared/ui/confirm/ui-confirm.component';
 import { UiFieldComponent } from '../../../../shared/ui/field/ui-field.component';
+import { UiPageHeaderComponent, type UiBreadcrumbItem } from '../../../../shared/ui/page-header/ui-page-header.component';
 import { UiSelectComponent, type UiSelectOption } from '../../../../shared/ui/select/ui-select.component';
 
 @Component({
   selector: 'app-admin-site-create',
-  imports: [FormField, FormRoot, RouterLink, UiButtonComponent, UiConfirmComponent, UiFieldComponent, UiSelectComponent],
+  imports: [FormField, FormRoot, RouterLink, UiButtonComponent, UiConfirmComponent, UiFieldComponent, UiPageHeaderComponent, UiSelectComponent],
   templateUrl: './admin-site-create.component.html',
 })
 export class AdminSiteCreateComponent implements OnInit {
@@ -23,6 +24,12 @@ export class AdminSiteCreateComponent implements OnInit {
   protected readonly saving = signal(false);
   protected readonly loading = signal(false);
   protected readonly editing = computed(() => this.routeSiteId !== null);
+  protected readonly crumbs = computed<readonly UiBreadcrumbItem[]>(() => [
+    { label: 'Inicio' },
+    { label: 'Sedes', href: '/administracion/sedes' },
+    { label: this.editing() ? 'Editar sede' : 'Agregar sede' },
+  ]);
+  protected readonly pageTitle = computed(() => this.editing() ? 'Editar sede' : 'Agregar sede');
   protected readonly departmentCode = signal('');
   protected readonly provinceCode = signal('');
   protected readonly districtCode = signal('');

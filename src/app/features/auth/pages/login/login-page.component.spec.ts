@@ -22,5 +22,6 @@ describe('LoginPageComponent', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Revisa los datos marcados para continuar.');
     expect(fixture.nativeElement.textContent).toContain('Ingresa tu usuario institucional.');
+    expect(fixture.nativeElement.textContent).not.toContain('@uprit.edu.pe');
   });
 });

@@ -38,7 +38,9 @@ describe('AdminAcademicConfigComponent', () => {
     fixture.detectChanges();
     const text = fixture.nativeElement.textContent as string;
 
-    expect(text).toContain('CONFIGURACIÓN ACADÉMICA');
+    expect(text).toContain('Inicio / Configuración académica');
+    expect(text).toContain('Configuración académica');
+    expect(text).toContain('Buscar');
     expect(text).toContain('Inglés');
     expect(text).toContain('Aún no hay combos horarios.');
     expect((fixture.nativeElement.querySelector('input#rule-min') as HTMLInputElement).value).toBe('31');

@@ -65,7 +65,7 @@ describe('application routes', () => {
     await harness.fixture.whenStable();
     harness.detectChanges();
 
-    expect(harness.routeNativeElement?.textContent).toContain('MÓDULOS');
+    expect(harness.routeNativeElement?.textContent).toContain('Módulos');
     expect(harness.routeNativeElement?.textContent).toContain('Roles y permisos');
   });
 

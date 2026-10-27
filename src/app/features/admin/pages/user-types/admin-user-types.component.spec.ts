@@ -50,11 +50,13 @@ describe('AdminUserTypesComponent', () => {
     fixture.detectChanges();
     const text = fixture.nativeElement.textContent as string;
 
-    expect(text).toContain('TIPOS DE USUARIOS');
+    expect(text).toContain('Inicio / Tipos de usuario');
+    expect(text).toContain('Tipos de usuario');
+    expect(text).toContain('Buscar tipo de usuario');
     expect(text).toContain('Estudiante');
     expect(text).toContain('Registrar matrícula - Historial académico');
     expect(text).toContain('1-1 de 1');
-    expect(text).toContain('Items por pagina:');
+    expect(text).toContain('Elementos por página:');
   });
 
   it('creates a user type with the modules that stay on', async () => {

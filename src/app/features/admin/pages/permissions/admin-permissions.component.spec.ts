@@ -42,12 +42,14 @@ describe('AdminPermissionsComponent', () => {
     const fixture = await setup();
     const text = fixture.nativeElement.textContent as string;
 
-    expect(text).toContain('PERMISOS');
+    expect(text).toContain('Inicio / Permisos');
+    expect(text).toContain('Permisos');
+    expect(text).toContain('Buscar permiso');
     expect(text).toContain('Control total');
     expect(text).toContain('Registro Programas');
     expect(text).toContain('Funcionalidad 1 - Funcionalidad 2');
     expect(text).toContain('1-2 de 2');
-    expect(text).toContain('Items por pagina:');
+    expect(text).toContain('Elementos por página:');
   });
 
   it('asks the catalog again when the search changes', async () => {

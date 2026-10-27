@@ -1,10 +1,16 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormField, FormRoot, form, required } from '@angular/forms/signals';
 
+import { INSTITUTIONAL_EMAIL_MESSAGE, institutionalEmail } from '../../../../core/auth/institutional-email';
+import { UiButtonComponent } from '../../../../shared/ui/button/ui-button.component';
+import { UiCheckboxComponent } from '../../../../shared/ui/checkbox/ui-checkbox.component';
 import { UiConfirmComponent, type UiConfirmDetail } from '../../../../shared/ui/confirm/ui-confirm.component';
 import { UiFieldComponent } from '../../../../shared/ui/field/ui-field.component';
+import { UiFilterBarComponent } from '../../../../shared/ui/filter-bar/ui-filter-bar.component';
+import { UiPageHeaderComponent, type UiBreadcrumbItem } from '../../../../shared/ui/page-header/ui-page-header.component';
 import { UiSelectComponent, type UiSelectOption } from '../../../../shared/ui/select/ui-select.component';
 import { UiStepperComponent } from '../../../../shared/ui/stepper/ui-stepper.component';
+import { UiTableComponent, type UiTableColumn, type UiTablePageChange, type UiTableRow, type UiTableSort } from '../../../../shared/ui/table/ui-table.component';
 import { PermissionCatalogService } from '../../data-access/permission-catalog.service';
 import { SitesService } from '../../data-access/sites.service';
 import { UserDirectoryService, type DirectoryOption, type UserInput } from '../../data-access/user-directory.service';
@@ -59,7 +65,7 @@ const emptyDraft = (): UserDraft => ({
 
 @Component({
   selector: 'app-admin-users',
-  imports: [FormField, FormRoot, UiConfirmComponent, UiFieldComponent, UiSelectComponent, UiStepperComponent],
+  imports: [FormField, FormRoot, UiButtonComponent, UiCheckboxComponent, UiConfirmComponent, UiFieldComponent, UiFilterBarComponent, UiPageHeaderComponent, UiSelectComponent, UiStepperComponent, UiTableComponent],
   templateUrl: './admin-users.component.html',
 })
 export class AdminUsersComponent implements OnInit {
@@ -102,15 +108,15 @@ export class AdminUsersComponent implements OnInit {
   protected readonly editorOpen = signal(false);
   protected readonly resetNotice = signal<{ id: string; username: string; password: string; mustChange: boolean } | null>(null);
   protected readonly confirmation = signal<{ message: string; details: readonly UiConfirmDetail[]; run: () => Promise<void> } | null>(null);
+  protected readonly submitted = signal(false);
+  protected readonly strictSubmit = signal(false);
   protected readonly editingId = signal<string | null>(null);
   protected readonly step = signal(0);
   protected readonly values = signal<UserDraft>(emptyDraft());
   protected readonly accountForm = form(this.values, (path) => {
     required(path.firstName, { message: 'Ingresa los nombres.' });
     required(path.paternalLastName, { message: 'Ingresa el apellido paterno.' });
-    required(path.maternalLastName, { message: 'Ingresa el apellido materno.' });
     required(path.documentNumber, { message: 'Ingresa el número de documento.' });
-    required(path.mobile, { message: 'Ingresa el celular.' });
     required(path.email, { message: 'Ingresa el correo.' });
   });
   protected readonly permissionOptions = signal<readonly EditorPermission[]>([]);
@@ -121,48 +127,91 @@ export class AdminUsersComponent implements OnInit {
     return features.length > 0 && features.every((feature) => feature.enabled);
   });
   protected readonly siteOptions = computed(() => this.sites().map((site) => ({ value: site.id, label: site.name })));
+  protected readonly crumbs = computed<readonly UiBreadcrumbItem[]>(() => this.editorOpen() || this.resetNotice()
+    ? [{ label: 'Inicio', action: 'list' }, { label: 'Usuarios', action: 'list' }]
+    : [{ label: 'Inicio' }, { label: 'Usuarios' }]);
+  protected readonly typeFilterOptions = computed<readonly UiSelectOption[]>(() => [
+    { value: '', label: 'Todos' },
+    ...this.types().map((type) => ({ value: type.code, label: type.name })),
+  ]);
+  protected readonly siteFilterOptions = computed<readonly UiSelectOption[]>(() => [
+    { value: '', label: 'Todas' },
+    ...this.sites().map((site) => ({ value: site.id, label: site.name })),
+  ]);
+  protected readonly statusFilterOptions = computed<readonly UiSelectOption[]>(() => [
+    { value: '', label: 'Todos' },
+    ...this.statuses().map((status) => ({ value: status.code, label: status.name })),
+  ]);
   protected readonly permissionChoices = computed(() => this.permissionOptions().map((item) => ({ value: item.id, label: item.name })));
+  protected readonly siteError = computed(() => this.strictSubmit() && !this.values().siteId ? 'Selecciona una sede.' : undefined);
+  protected readonly maternalError = computed(() => this.strictSubmit() && !this.values().maternalLastName.trim() ? 'Ingresa el apellido materno.' : undefined);
+  protected readonly documentTypeError = computed(() => this.submitted() && !this.values().documentType ? 'Selecciona el tipo de documento.' : undefined);
+  protected readonly countryError = computed(() => this.submitted() && !this.values().mobileCountry ? 'Selecciona el código de celular.' : undefined);
+  protected readonly documentError = computed(() => {
+    if (!this.submitted()) return undefined;
+    const draft = this.values();
+    const number = draft.documentNumber.trim();
+    if (!number) return undefined;
+    const valid = draft.documentType === 'DNI' ? /^\d{8}$/.test(number) : /^[A-Za-z0-9]{6,12}$/.test(number);
+    if (valid) return undefined;
+    return draft.documentType === 'DNI' ? 'El DNI debe tener 8 dígitos.' : 'Ingresa un documento de 6 a 12 caracteres.';
+  });
+  protected readonly mobileError = computed(() => {
+    const mobile = this.values().mobile.trim();
+    if (this.strictSubmit() && !mobile) return 'Ingresa el celular.';
+    return this.submitted() && mobile && !/^\d{6,15}$/.test(mobile) ? 'Ingresa un celular válido.' : undefined;
+  });
+  protected readonly institutionalEmailMessage = INSTITUTIONAL_EMAIL_MESSAGE;
+  protected readonly emailError = computed(() => {
+    const email = this.values().email.trim();
+    return this.submitted() && email && !institutionalEmail(email) ? INSTITUTIONAL_EMAIL_MESSAGE : undefined;
+  });
+  protected readonly passwordError = computed(() => {
+    if (!this.submitted()) return undefined;
+    const password = this.values().password;
+    const valid = this.editingId() ? password.length === 0 || password.length >= 8 : password.length >= 8;
+    return valid ? undefined : 'La contraseña debe tener al menos 8 caracteres.';
+  });
   protected readonly types = signal<readonly DirectoryOption[]>([]);
   protected readonly statuses = signal<readonly DirectoryOption[]>([]);
   protected readonly sites = signal<readonly { readonly id: string; readonly name: string }[]>([]);
   private readonly items = signal<readonly UserRow[]>([]);
-
-  protected readonly pageCount = computed(() => Math.max(1, Math.ceil(this.total() / this.pageSize())));
-  protected readonly currentPage = computed(() => Math.min(this.page(), this.pageCount() - 1));
-  protected readonly visibleRows = computed(() => {
-    const size = this.pageSize();
-    const missing = Math.max(0, size - this.items().length);
-    const pads = Array.from({ length: missing }, (_, index): UserRow => ({
-      id: `vacio-${this.currentPage()}-${index}`,
-      documentNumber: '',
-      firstName: '',
-      paternalLastName: '',
-      maternalLastName: '',
-      typeName: '',
-      placeholder: true,
-    }));
-    return [...this.items(), ...pads];
-  });
-  protected readonly rangeLabel = computed(() => {
-    const total = this.total();
-    if (total === 0) return '0-0 de 0';
-    const start = this.currentPage() * this.pageSize() + 1;
-    return `${start}-${Math.min(start + this.pageSize() - 1, total)} de ${total}`;
-  });
+  protected readonly columns = computed<readonly UiTableColumn[]>(() => [
+    { key: 'document', label: 'Documento', sortable: true },
+    { key: 'firstName', label: 'Nombres', sortable: true },
+    { key: 'paternalLastName', label: 'Apellido paterno', sortable: true },
+    { key: 'maternalLastName', label: 'Apellido materno', sortable: true },
+    { key: 'type', label: `Tipo (${this.types().length})`, sortable: true },
+  ]);
+  protected readonly tableRows = computed(() => this.items().filter((item) => !item.placeholder).map((item) => ({
+    id: item.id,
+    document: item.documentNumber,
+    firstName: item.firstName,
+    paternalLastName: item.paternalLastName,
+    maternalLastName: item.maternalLastName,
+    type: item.typeName,
+  })));
+  protected readonly tableSort = computed<UiTableSort>(() => ({
+    key: this.sort(),
+    direction: this.direction() === 'asc' ? 'ascending' : 'descending',
+  }));
 
   ngOnInit(): void {
     void this.loadSites();
     void this.load();
   }
 
-  protected onSearch(event: Event): void {
-    this.search.set((event.target as HTMLInputElement).value);
+  protected onCrumb(action: string): void {
+    if (action === 'list') this.backToList();
+  }
+
+  protected onSearch(value: string): void {
+    this.search.set(value);
     this.page.set(0);
     void this.load();
   }
 
-  protected onFilter(kind: 'role' | 'site' | 'status', event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
+  protected onFilter(kind: 'role' | 'site' | 'status', value: string): void {
     if (kind === 'role') this.role.set(value);
     else if (kind === 'site') this.siteId.set(value);
     else this.status.set(value);
@@ -170,30 +219,39 @@ export class AdminUsersComponent implements OnInit {
     void this.load();
   }
 
-  protected changeSort(field: SortField): void {
-    if (this.sort() === field) this.direction.update((current) => (current === 'asc' ? 'desc' : 'asc'));
-    else {
-      this.sort.set(field);
-      this.direction.set('asc');
-    }
+  protected onTableSort(event: UiTableSort): void {
+    if (event.key !== 'document' && event.key !== 'firstName' && event.key !== 'paternalLastName' && event.key !== 'maternalLastName' && event.key !== 'type') return;
+    this.sort.set(event.key);
+    this.direction.set(event.direction === 'ascending' ? 'asc' : 'desc');
     this.page.set(0);
     void this.load();
   }
 
-  protected changePageSize(event: Event): void {
-    const value = Number((event.target as HTMLSelectElement).value);
-    if (value === 5 || value === 10 || value === 20) {
-      this.pageSize.set(value);
-      this.page.set(0);
-      void this.load();
-    }
+  protected onTablePage(event: UiTablePageChange): void {
+    if (event.pageSize !== 5 && event.pageSize !== 10 && event.pageSize !== 20) return;
+    if (event.page === this.page() && event.pageSize === this.pageSize()) return;
+    this.pageSize.set(event.pageSize);
+    this.page.set(event.page);
+    void this.load();
   }
 
-  protected changePage(next: number): void {
-    const page = Math.min(Math.max(next, 0), this.pageCount() - 1);
-    if (page === this.currentPage()) return;
-    this.page.set(page);
-    void this.load();
+  protected editUser(row: UiTableRow): void {
+    if (typeof row['id'] === 'string') void this.beginEdit(row['id']);
+  }
+
+  protected resetUser(row: UiTableRow): void {
+    if (typeof row['id'] !== 'string') return;
+    const id = row['id'];
+    const current = this.items().find((item) => item.id === id);
+    const name = current ? `${current.firstName} ${current.paternalLastName} ${current.maternalLastName}`.replace(/\s+/g, ' ').trim() : 'Usuario';
+    this.ask('¿Estás seguro que deseas restablecer la contraseña de este usuario?', [
+      { label: 'Nombre', value: name },
+      { label: 'Documento', value: current?.documentNumber ?? '—' },
+    ], () => this.resetPassword(id));
+  }
+
+  protected removeUser(row: UiTableRow): void {
+    if (typeof row['id'] === 'string') this.remove(row['id']);
   }
 
   protected setDraft(key: 'documentType' | 'siteId' | 'mobileCountry' | 'enabled', value: string): void {
@@ -261,8 +319,7 @@ export class AdminUsersComponent implements OnInit {
     }
   }
 
-  protected toggleMustChange(event: Event): void {
-    const mustChange = (event.target as HTMLInputElement).checked;
+  protected toggleMustChange(mustChange: boolean): void {
     this.resetNotice.update((current) => (current ? { ...current, mustChange } : current));
   }
 
@@ -323,6 +380,8 @@ export class AdminUsersComponent implements OnInit {
   }
 
   protected closeEditor(): void {
+    this.submitted.set(false);
+    this.strictSubmit.set(false);
     this.editorOpen.set(false);
     this.editingId.set(null);
     this.step.set(0);
@@ -337,17 +396,20 @@ export class AdminUsersComponent implements OnInit {
   }
 
   protected next(): void {
-    this.accountForm().markAsTouched();
-    const draft = this.values();
-    const documentOk = draft.documentType === 'DNI' ? /^\d{8}$/.test(draft.documentNumber) : /^[A-Za-z0-9]{6,12}$/.test(draft.documentNumber);
-    const passwordOk = this.editingId() ? draft.password.length === 0 || draft.password.length >= 8 : draft.password.length >= 8;
-    const contactOk = /^\d{6,15}$/.test(draft.mobile) && /^[^\s<>]+@[^\s<>]+\.[^\s<>]+$/.test(draft.email);
-    if (this.accountForm().invalid() || !documentOk || !passwordOk || !contactOk || !draft.siteId) {
-      this.message.set(passwordOk ? 'Revisa los datos marcados para continuar.' : 'La contraseña debe tener al menos 8 caracteres.');
+    const editing = this.editingId();
+    if (!this.accountReady(!editing)) return;
+    if (!editing) {
+      this.step.set(1);
       return;
     }
-    this.message.set('');
-    this.step.set(1);
+    void this.persistUser(editing, this.toInput(true), 'next');
+  }
+
+  protected saveAccount(): void {
+    if (!this.accountReady(false)) return;
+    const editing = this.editingId();
+    if (!editing) return;
+    void this.persistUser(editing, this.toInput(true), 'stay');
   }
 
   protected toggleFeature(name: string): void {
@@ -366,18 +428,45 @@ export class AdminUsersComponent implements OnInit {
   }
 
   protected async save(): Promise<void> {
+    const input = this.toInput(false);
+    if (!input.grants.some((grant) => grant.enabled)) {
+      this.message.set('Activa al menos una funcionalidad.');
+      return;
+    }
+    const editing = this.editingId();
+    this.ask(
+      editing ? '¿Estás seguro que deseas guardar los cambios de este usuario?' : '¿Estás seguro que deseas registrar un nuevo usuario con los datos ingresados?',
+      this.accountDetails(input),
+      () => this.persistUser(editing, input, 'close'),
+    );
+  }
+
+  private accountReady(strict: boolean): boolean {
+    this.submitted.set(true);
+    this.strictSubmit.set(strict);
+    this.accountForm().markAsTouched();
+    const draft = this.values();
+    const documentOk = draft.documentType === 'DNI' ? /^\d{8}$/.test(draft.documentNumber.trim()) : /^[A-Za-z0-9]{6,12}$/.test(draft.documentNumber.trim());
+    const passwordOk = this.editingId() ? draft.password.length === 0 || draft.password.length >= 8 : draft.password.length >= 8;
+    const emailOk = institutionalEmail(draft.email) !== null;
+    const mobileOk = !strict || /^\d{6,15}$/.test(draft.mobile.trim());
+    const namesOk = draft.firstName.trim().length > 0 && draft.paternalLastName.trim().length > 0 && (!strict || draft.maternalLastName.trim().length > 0);
+    if (this.accountForm().invalid() || !namesOk || !documentOk || !passwordOk || !emailOk || !mobileOk || (strict && !draft.siteId) || (strict && !draft.documentType) || (strict && !draft.mobileCountry)) {
+      this.message.set(passwordOk ? 'Revisa los datos marcados para continuar.' : 'La contraseña debe tener al menos 8 caracteres.');
+      return false;
+    }
+    this.message.set('');
+    return true;
+  }
+
+  private toInput(preserveAccess: boolean): UserInput {
+    const draft = this.values();
     const grants = this.permissionOptions().flatMap((permission) => permission.functionalities.map((feature) => ({
       permissionId: permission.id,
       name: feature.name,
       enabled: feature.enabled,
     })));
-    if (!grants.some((grant) => grant.enabled)) {
-      this.message.set('Activa al menos una funcionalidad.');
-      return;
-    }
-    const draft = this.values();
-    const editing = this.editingId();
-    const input: UserInput = {
+    return {
       documentType: draft.documentType,
       documentNumber: draft.documentNumber.trim(),
       firstName: draft.firstName.trim(),
@@ -390,30 +479,36 @@ export class AdminUsersComponent implements OnInit {
       email: draft.email.trim(),
       password: draft.password || undefined,
       enabled: draft.enabled === 'true',
-      grants,
+      grants: preserveAccess && !grants.some((grant) => grant.enabled) ? [] : grants,
     };
-    const site = this.siteOptions().find((item) => item.value === input.siteId)?.label ?? 'Sin sede';
-    this.ask(
-      editing ? '¿Estás seguro que deseas guardar los cambios de este usuario?' : '¿Estás seguro que deseas registrar un nuevo usuario con los datos ingresados?',
-      [
-        { label: 'Nombres', value: input.firstName },
-        { label: 'Apellidos', value: `${input.paternalLastName} ${input.maternalLastName}`.trim() },
-        { label: 'Documento', value: input.documentNumber },
-        { label: 'Sede', value: site },
-        { label: 'Estado', value: input.enabled ? 'Habilitado' : 'Deshabilitado' },
-      ],
-      () => this.persistUser(editing, input),
-    );
   }
 
-  private async persistUser(id: string | null, input: UserInput): Promise<void> {
+  private accountDetails(input: UserInput): readonly UiConfirmDetail[] {
+    const site = this.siteOptions().find((item) => item.value === input.siteId)?.label ?? 'Sin sede';
+    return [
+      { label: 'Nombres', value: input.firstName },
+      { label: 'Apellidos', value: `${input.paternalLastName} ${input.maternalLastName}`.trim() },
+      { label: 'Documento', value: input.documentNumber },
+      { label: 'Sede', value: site },
+      { label: 'Estado', value: input.enabled ? 'Habilitado' : 'Deshabilitado' },
+    ];
+  }
+
+  private async persistUser(id: string | null, input: UserInput, after: 'close' | 'stay' | 'next'): Promise<void> {
     this.saving.set(true);
     this.message.set('');
     try {
       if (id) await this.directory.update(id, input);
       else await this.directory.create(input);
-      this.closeEditor();
+      if (after === 'close') {
+        this.closeEditor();
+        await this.load();
+        return;
+      }
+      this.values.update((current) => ({ ...current, password: '' }));
+      if (after === 'next') this.step.set(1);
       await this.load();
+      if (!this.message()) this.message.set('Datos guardados.');
     } catch (error) {
       this.message.set(readError(error, 'No se pudo guardar el usuario.'));
     } finally {

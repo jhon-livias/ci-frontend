@@ -1,17 +1,6 @@
-<p class="text-xs text-[#7c8691]">
-  Inicio / <a routerLink="/administracion/sedes" class="hover:underline">Sedes</a> /
-  {{ editing() ? 'Editar sede' : 'Agregar sede' }}
-</p>
-<div class="mt-5 flex flex-wrap items-center justify-between gap-4">
-  <h1 class="font-[var(--font-heading)] text-2xl font-semibold text-[#a9002d]">
-    {{ editing() ? 'Editar sede' : 'Agregar sede' }}
-  </h1>
-  <a
-    routerLink="/administracion/sedes"
-    class="rounded-full bg-[#a9002d] px-8 py-2.5 text-sm font-semibold text-white"
-    >Volver</a
-  >
-</div>
+<ui-page-header [items]="crumbs()" [title]="pageTitle()">
+  <a routerLink="/administracion/sedes" class="grid h-11 place-items-center rounded-md bg-[#a9002d] px-4 text-sm font-bold text-white">Volver</a>
+</ui-page-header>
 <form [formRoot]="siteForm" (submit)="submit()" class="mt-6 space-y-6 rounded-2xl bg-white p-6 shadow-sm sm:p-8" novalidate>
   <div class="grid gap-4 sm:grid-cols-[1fr_2fr]">
     <ui-field
