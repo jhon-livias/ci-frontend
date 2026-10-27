@@ -53,13 +53,23 @@ export class AuthSessionService {
 
   async restore(): Promise<void> {
     try {
-      this.start(await this.authApi.session());
-    } catch {
-      try {
-        this.start(await this.authApi.refresh());
-      } catch {
-        this.clear();
+      const current = await this.authApi.session();
+      if (current) {
+        this.start(current);
+        return;
       }
+    } catch {
+      // La cookie de acceso existe, pero ya no es válida.
     }
+    try {
+      const refreshed = await this.authApi.refresh();
+      if (refreshed) {
+        this.start(refreshed);
+        return;
+      }
+    } catch {
+      // La cookie de renovación existe, pero ya no es válida.
+    }
+    this.clear();
   }
 }

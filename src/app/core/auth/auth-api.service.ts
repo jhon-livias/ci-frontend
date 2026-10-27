@@ -69,18 +69,18 @@ export class AuthApiService {
     return this.toSession(response);
   }
 
-  async session(): Promise<AuthSessionSnapshot> {
+  async session(): Promise<AuthSessionSnapshot | null> {
     const response = await firstValueFrom(
       this.http.get<unknown>('/api/v1/auth/session', { withCredentials: true }),
     );
-    return this.toSession(response);
+    return response == null ? null : this.toSession(response);
   }
 
-  async refresh(): Promise<AuthSessionSnapshot> {
+  async refresh(): Promise<AuthSessionSnapshot | null> {
     const response = await firstValueFrom(
       this.http.post<unknown>('/api/v1/auth/refresh', {}, { withCredentials: true }),
     );
-    return this.toSession(response);
+    return response == null ? null : this.toSession(response);
   }
 
   async logout(): Promise<void> {
