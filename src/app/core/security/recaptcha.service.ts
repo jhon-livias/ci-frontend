@@ -11,12 +11,17 @@ interface RecaptchaApi {
   execute(siteKey: string, options: { readonly action: string }): Promise<string>;
 }
 
+interface TrustedScriptPolicy {
+  createScriptURL(value: string): string;
+}
+
 interface TrustedTypesWindow {
   readonly trustedTypes?: {
+    readonly defaultPolicy: TrustedScriptPolicy | null;
     createPolicy(
       name: string,
       rules: { readonly createScriptURL: (value: string) => string },
-    ): { createScriptURL(value: string): string };
+    ): TrustedScriptPolicy;
   };
 }
 
@@ -31,10 +36,33 @@ const scriptId = 'google-recaptcha-v3';
 const validSiteKey = (value: unknown): value is string =>
   typeof value === 'string' && /^[A-Za-z0-9_-]{20,100}$/.test(value);
 
+/** Google carga más scripts después del primero; solo esos hosts pueden pasar. */
+export const recaptchaScriptAllowed = (value: string): boolean => {
+  try {
+    const url = new URL(value);
+    const allowedHost =
+      url.hostname === 'www.google.com' ||
+      url.hostname === 'www.gstatic.com' ||
+      url.hostname === 'www.recaptcha.net' ||
+      url.hostname === 'recaptcha.google.com';
+    return url.protocol === 'https:' && allowedHost && url.pathname.startsWith('/recaptcha/');
+  } catch {
+    return false;
+  }
+};
+
+const trustedScriptUrl = (value: string): string => {
+  if (!recaptchaScriptAllowed(value)) {
+    throw new TypeError('URL de script no permitida.');
+  }
+  return value;
+};
+
 @Injectable({ providedIn: 'root' })
 export class RecaptchaService {
   private readonly document = inject(DOCUMENT);
   private loading: Promise<RecaptchaApi> | null = null;
+  private scriptPolicy: TrustedScriptPolicy | null = null;
 
   async executeLogin(): Promise<string> {
     if (!this.isEnabled()) return 'recaptcha-disabled-in-nonproduction';
@@ -71,13 +99,7 @@ export class RecaptchaService {
       script.id = scriptId;
       script.async = true;
       const scriptUrl = `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(siteKey)}`;
-      const trustedTypes = (windowRef as Window & TrustedTypesWindow).trustedTypes;
-      // La política solo recibe una URL construida desde una clave validada; la
-      // CSP permite este nombre sin abrir una política genérica de scripts.
-      script.src =
-        trustedTypes
-          ?.createPolicy('recaptcha', { createScriptURL: (value) => value })
-          .createScriptURL(scriptUrl) ?? scriptUrl;
+      script.src = this.asTrustedScriptUrl(windowRef, scriptUrl);
       script.onload = () =>
         windowRef.grecaptcha
           ? resolve(windowRef.grecaptcha)
@@ -89,5 +111,28 @@ export class RecaptchaService {
       throw error;
     });
     return this.loading;
+  }
+
+  private asTrustedScriptUrl(windowRef: Window, scriptUrl: string): string {
+    const trustedTypes = (windowRef as Window & TrustedTypesWindow).trustedTypes;
+    if (!trustedTypes) return scriptUrl;
+    // api.js inserta más scripts con texto plano. La política default los acepta
+    // solo si apuntan a reCAPTCHA; el resto sigue bloqueado.
+    if (!trustedTypes.defaultPolicy) {
+      try {
+        trustedTypes.createPolicy('default', { createScriptURL: trustedScriptUrl });
+      } catch {
+        // Otra librería ya registró la política default.
+      }
+    }
+    try {
+      this.scriptPolicy ??= trustedTypes.createPolicy('recaptcha', {
+        createScriptURL: trustedScriptUrl,
+      });
+    } catch {
+      // La asignación de texto usa la política default creada arriba.
+      return scriptUrl;
+    }
+    return this.scriptPolicy.createScriptURL(scriptUrl);
   }
 }
