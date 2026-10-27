@@ -2,7 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-import { AuthenticatedUser, type ApplicationRole, type LoginRequest } from './authenticated-user.model';
+import {
+  AuthenticatedUser,
+  type ApplicationRole,
+  type LoginRequest,
+} from './authenticated-user.model';
 
 interface LoginResponseDto {
   readonly csrfToken: string;
@@ -20,7 +24,13 @@ export interface AuthSessionSnapshot {
   readonly csrfToken: string;
 }
 
-const applicationRoles: readonly ApplicationRole[] = ['STUDENT', 'TEACHER', 'ADVISOR', 'DIRECTOR', 'ADMINISTRATOR'];
+const applicationRoles: readonly ApplicationRole[] = [
+  'STUDENT',
+  'TEACHER',
+  'ADVISOR',
+  'DIRECTOR',
+  'ADMINISTRATOR',
+];
 
 const isLoginResponseDto = (value: unknown): value is LoginResponseDto => {
   if (!value || typeof value !== 'object') return false;
@@ -48,20 +58,28 @@ const isLoginResponseDto = (value: unknown): value is LoginResponseDto => {
 export class AuthApiService {
   private readonly http = inject(HttpClient);
 
-  async login(credentials: LoginRequest): Promise<AuthSessionSnapshot> {
+  async login(credentials: LoginRequest, recaptchaToken: string): Promise<AuthSessionSnapshot> {
     const response = await firstValueFrom(
-      this.http.post<unknown>('/api/v1/auth/login', credentials, { withCredentials: true }),
+      this.http.post<unknown>(
+        '/api/v1/auth/login',
+        { ...credentials, recaptchaToken },
+        { withCredentials: true },
+      ),
     );
     return this.toSession(response);
   }
 
   async session(): Promise<AuthSessionSnapshot> {
-    const response = await firstValueFrom(this.http.get<unknown>('/api/v1/auth/session', { withCredentials: true }));
+    const response = await firstValueFrom(
+      this.http.get<unknown>('/api/v1/auth/session', { withCredentials: true }),
+    );
     return this.toSession(response);
   }
 
   async refresh(): Promise<AuthSessionSnapshot> {
-    const response = await firstValueFrom(this.http.post<unknown>('/api/v1/auth/refresh', {}, { withCredentials: true }));
+    const response = await firstValueFrom(
+      this.http.post<unknown>('/api/v1/auth/refresh', {}, { withCredentials: true }),
+    );
     return this.toSession(response);
   }
 
@@ -70,21 +88,35 @@ export class AuthApiService {
   }
 
   async changePassword(password: string): Promise<void> {
-    await firstValueFrom(this.http.post('/api/v1/auth/password', { password }, { withCredentials: true }));
+    await firstValueFrom(
+      this.http.post('/api/v1/auth/password', { password }, { withCredentials: true }),
+    );
   }
 
   async requestPasswordRecovery(email: string): Promise<void> {
-    await firstValueFrom(this.http.post('/api/v1/auth/password-recovery', { email }, { withCredentials: true }));
+    await firstValueFrom(
+      this.http.post('/api/v1/auth/password-recovery', { email }, { withCredentials: true }),
+    );
   }
 
   async confirmPasswordRecovery(email: string, code: string, password: string): Promise<void> {
-    await firstValueFrom(this.http.post('/api/v1/auth/password-recovery/confirm', { email, code, password }, { withCredentials: true }));
+    await firstValueFrom(
+      this.http.post(
+        '/api/v1/auth/password-recovery/confirm',
+        { email, code, password },
+        { withCredentials: true },
+      ),
+    );
   }
 
   private toSession(response: unknown): AuthSessionSnapshot {
-    if (!isLoginResponseDto(response)) throw new Error('La respuesta de autenticación no tiene un formato válido.');
-    const roles = response.user.roles.filter((role): role is ApplicationRole => applicationRoles.includes(role as ApplicationRole));
-    if (roles.length !== response.user.roles.length) throw new Error('La respuesta de autenticación contiene un rol no reconocido.');
+    if (!isLoginResponseDto(response))
+      throw new Error('La respuesta de autenticación no tiene un formato válido.');
+    const roles = response.user.roles.filter((role): role is ApplicationRole =>
+      applicationRoles.includes(role as ApplicationRole),
+    );
+    if (roles.length !== response.user.roles.length)
+      throw new Error('La respuesta de autenticación contiene un rol no reconocido.');
     const profile = response.user.profile;
     return {
       csrfToken: response.csrfToken,

@@ -8,15 +8,25 @@ import { AlertTone, UiAlertComponent } from '../../../../shared/ui/alert/ui-aler
 import { UiButtonComponent } from '../../../../shared/ui/button/ui-button.component';
 import { UiFieldComponent } from '../../../../shared/ui/field/ui-field.component';
 import { AuthLayoutComponent } from '../../../../layouts/auth-layout/auth-layout.component';
+import { RecaptchaService } from '../../../../core/security/recaptcha.service';
 
 @Component({
-  imports: [FormField, FormRoot, RouterLink, UiAlertComponent, UiButtonComponent, UiFieldComponent, AuthLayoutComponent],
+  imports: [
+    FormField,
+    FormRoot,
+    RouterLink,
+    UiAlertComponent,
+    UiButtonComponent,
+    UiFieldComponent,
+    AuthLayoutComponent,
+  ],
   templateUrl: './login-page.component.html',
 })
 export class LoginPageComponent {
   private readonly authApi = inject(AuthApiService);
   private readonly session = inject(AuthSessionService);
   private readonly router = inject(Router);
+  private readonly recaptcha = inject(RecaptchaService);
   protected readonly credentials = signal<LoginCredentials>({ username: '', password: '' });
   protected readonly loginForm = form(this.credentials, (path) => {
     required(path.username, { message: 'Ingresa tu usuario institucional.' });
@@ -38,11 +48,15 @@ export class LoginPageComponent {
     this.notice.set(null);
     this.isSubmitting.set(true);
     try {
-      const authenticatedSession = await this.authApi.login(this.credentials());
+      const recaptchaToken = await this.recaptcha.executeLogin();
+      const authenticatedSession = await this.authApi.login(this.credentials(), recaptchaToken);
       this.session.start(authenticatedSession);
       await this.router.navigateByUrl(this.session.defaultRoute());
     } catch {
-      this.notice.set({ text: 'No pudimos iniciar sesión. Verifica tus credenciales e inténtalo nuevamente.', tone: 'error' });
+      this.notice.set({
+        text: 'No pudimos iniciar sesión. Verifica tus credenciales e inténtalo nuevamente.',
+        tone: 'error',
+      });
     } finally {
       this.isSubmitting.set(false);
     }

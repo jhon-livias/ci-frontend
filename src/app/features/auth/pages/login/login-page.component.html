@@ -25,24 +25,59 @@
         <ui-alert id="login-notice" [tone]="message.tone">{{ message.text }}</ui-alert>
       }
 
-      <ui-button class="mt-2" [disabled]="isSubmitting()" [fullWidth]="true" [pill]="true" type="submit">
+      <ui-button
+        class="mt-2"
+        [disabled]="isSubmitting()"
+        [fullWidth]="true"
+        [pill]="true"
+        type="submit"
+      >
         {{ isSubmitting() ? 'Ingresando…' : 'Iniciar sesión' }}
       </ui-button>
+
+      <p class="px-2 text-center text-xs leading-5 text-[#7c8691]">
+        Este sitio está protegido por reCAPTCHA. Se aplican la
+        <a
+          class="underline hover:text-[#92001f]"
+          href="https://policies.google.com/privacy"
+          rel="noopener noreferrer"
+          target="_blank"
+          >Política de Privacidad</a
+        >
+        y los
+        <a
+          class="underline hover:text-[#92001f]"
+          href="https://policies.google.com/terms"
+          rel="noopener noreferrer"
+          target="_blank"
+          >Términos de Servicio</a
+        >
+        de Google.
+      </p>
     </form>
 
     <div class="my-5 flex items-center gap-4 text-sm text-[#7c8691]" aria-hidden="true">
-      <span class="h-px flex-1 bg-[#dfd6d6]"></span><span>o</span><span class="h-px flex-1 bg-[#dfd6d6]"></span>
+      <span class="h-px flex-1 bg-[#dfd6d6]"></span><span>o</span
+      ><span class="h-px flex-1 bg-[#dfd6d6]"></span>
     </div>
 
-    <ui-button [fullWidth]="true" [pill]="true" variant="soft" type="button" (click)="notifyUnavailable('Google')">
+    <ui-button
+      [fullWidth]="true"
+      [pill]="true"
+      variant="soft"
+      type="button"
+      (click)="notifyUnavailable('Google')"
+    >
       Continuar con Google
     </ui-button>
 
     <div class="mt-6 text-center text-sm">
-      <a class="font-semibold text-[#92001f] underline-offset-4 hover:underline" routerLink="/recuperar-contrasena">
+      <a
+        class="font-semibold text-[#92001f] underline-offset-4 hover:underline"
+        routerLink="/recuperar-contrasena"
+      >
         ¿Olvidaste tu contraseña?
       </a>
     </div>
-
   </section>
 </app-auth-layout>
