@@ -29,8 +29,41 @@
     <ui-stepper [active]="step()" [steps]="steps" (stepChange)="onStep($event)" />
   </div>
   @if (step() === 0) {
+    <section class="mt-8 w-full rounded-2xl bg-white px-6 py-8 shadow-[0_8px_24px_rgb(30_30_30_/_8%)] sm:px-10" aria-labelledby="user-kind-title">
+      <h2 class="font-[var(--font-heading)] text-xl font-bold tracking-wide text-[#a9002d]" id="user-kind-title">{{ editingId() ? 'EDITAR USUARIO' : 'NUEVO USUARIO' }}</h2>
+      <p class="mt-3 max-w-2xl text-sm leading-relaxed text-[#1e1e1e]">Elige el tipo. En el último paso solo verás los permisos de ese tipo.</p>
+      <div class="mt-6 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Tipo de usuario">
+        @for (item of userKinds; track item.code) {
+          <button
+            class="rounded-2xl border px-5 py-4 text-left transition"
+            [class.border-[#a9002d]]="kind() === item.code"
+            [class.bg-[#fdf2f4]]="kind() === item.code"
+            [class.border-[#eadfe1]]="kind() !== item.code"
+            [class.bg-white]="kind() !== item.code"
+            type="button"
+            role="radio"
+            [attr.aria-checked]="kind() === item.code"
+            (click)="chooseKind(item.code)"
+          >
+            <span class="block font-[var(--font-heading)] text-base font-bold text-[#1e1e1e]">{{ item.label }}</span>
+            <span class="mt-1 block text-sm leading-relaxed text-[#5e5254]">{{ item.description }}</span>
+          </button>
+        }
+      </div>
+      @if (typeSubmitted() && !kind()) {
+        <p class="mt-4 text-sm font-semibold text-[#92001f]" role="alert">Elige el tipo de usuario.</p>
+      }
+      <div class="mt-8 flex flex-wrap justify-end gap-4">
+        <button class="rounded-full border border-[#c4002f] px-10 py-2.5 text-sm font-semibold text-[#c4002f]" type="button" (click)="closeEditor()">Cancelar</button>
+        <button class="rounded-full bg-[#3d3536] px-10 py-2.5 text-sm font-semibold text-white" type="button" (click)="next()">Siguiente</button>
+      </div>
+    </section>
+  } @else if (step() === 1) {
     <form class="mt-8 w-full rounded-2xl bg-white px-6 py-8 shadow-[0_8px_24px_rgb(30_30_30_/_8%)] sm:px-10" [formRoot]="accountForm" (submit)="$event.preventDefault(); next()">
       <h2 class="font-[var(--font-heading)] text-xl font-bold tracking-wide text-[#a9002d]">{{ editingId() ? 'EDITAR USUARIO' : 'NUEVO USUARIO' }}</h2>
+      @if (kindLabel()) {
+        <p class="mt-3 text-sm text-[#1e1e1e]">Tipo: <span class="font-bold">{{ kindLabel() }}</span></p>
+      }
       <div class="mt-6 grid gap-4 md:grid-cols-2">
         <div class="md:col-span-2">
           <ui-field [formField]="accountForm.firstName" id="user-first-name" label="Nombres" placeholder="Ingrese sus nombres" />
@@ -67,7 +100,7 @@
         <ui-select id="user-status" label="Estado" [options]="statusOptions" [searchable]="false" [value]="values().enabled" (valueChange)="setDraft('enabled', $event)" />
       </div>
       <div class="mt-8 flex flex-wrap justify-end gap-4">
-        <button class="rounded-full border border-[#c4002f] px-10 py-2.5 text-sm font-semibold text-[#c4002f]" type="button" (click)="closeEditor()">Atrás</button>
+        <button class="rounded-full border border-[#c4002f] px-10 py-2.5 text-sm font-semibold text-[#c4002f]" type="button" (click)="step.set(0)">Atrás</button>
         @if (editingId()) {
           <button class="rounded-full bg-[#a9002d] px-10 py-2.5 text-sm font-semibold text-white disabled:opacity-60" type="button" [disabled]="saving()" (click)="saveAccount()">Guardar</button>
         }
@@ -77,51 +110,51 @@
   } @else {
     <section class="mt-8 w-full rounded-2xl bg-white px-6 py-8 shadow-[0_8px_24px_rgb(30_30_30_/_8%)] sm:px-10" aria-label="Permisos del usuario">
       <h2 class="font-[var(--font-heading)] text-xl font-bold tracking-wide text-[#a9002d]">PERMISOS</h2>
-      <div class="mt-5 grid gap-4 md:grid-cols-3">
-        <ui-select id="user-permission" label="Permiso" [options]="permissionChoices()" [value]="selectedPermissionId()" (valueChange)="selectedPermissionId.set($event)" />
-      </div>
-      <article class="mt-6 overflow-hidden rounded-xl border border-[#eadfe1]">
-        <h3 class="bg-[#e7cfd2] py-3 text-center text-base font-bold text-[#2b2425]">Control Parcial</h3>
-        <ul>
-          @for (feature of selectedPermission()?.functionalities ?? []; track feature.name) {
-            <li class="flex items-center gap-4 px-6 py-4">
-              <button
-                class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors"
-                [class.bg-[#d0123a]]="feature.enabled"
-                [class.bg-[#bdbdbd]]="!feature.enabled"
-                type="button"
-                role="switch"
-                [attr.aria-checked]="feature.enabled"
-                [attr.aria-label]="feature.name"
-                (click)="toggleFeature(feature.name)"
-              >
-                <span class="inline-block size-5 rounded-full bg-white shadow transition-transform" [class.translate-x-5]="feature.enabled" [class.translate-x-0.5]="!feature.enabled"></span>
-              </button>
-              <span>{{ feature.name }}</span>
-            </li>
-          }
-        </ul>
-      </article>
-      <article class="mt-6 overflow-hidden rounded-xl border border-[#eadfe1]">
-        <h3 class="bg-[#e7cfd2] py-3 text-center text-base font-bold text-[#2b2425]">Control Total</h3>
-        <div class="flex items-center gap-4 px-6 py-5">
-          <button
-            class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors"
-            [class.bg-[#d0123a]]="allFeaturesOn()"
-            [class.bg-[#bdbdbd]]="!allFeaturesOn()"
-            type="button"
-            role="switch"
-            [attr.aria-checked]="allFeaturesOn()"
-            aria-label="Todo"
-            (click)="toggleAll()"
-          >
-            <span class="inline-block size-5 rounded-full bg-white shadow transition-transform" [class.translate-x-5]="allFeaturesOn()" [class.translate-x-0.5]="!allFeaturesOn()"></span>
-          </button>
-          <span>Todo</span>
-        </div>
-      </article>
+      <p class="mt-3 text-sm text-[#1e1e1e]">Tipo: <span class="font-bold">{{ kindLabel() }}</span>. Aquí solo aparecen sus permisos.</p>
+      @if (visiblePermissions().length === 0) {
+        <p class="mt-6 rounded-xl border border-[#eadfe1] bg-[#faf6f7] px-5 py-4 text-sm text-[#1e1e1e]" role="status">Este tipo todavía no tiene permisos. Configúralos en Permisos y vuelve a intentarlo.</p>
+      }
+      @for (permission of visiblePermissions(); track permission.id) {
+        <article class="mt-6 overflow-hidden rounded-xl border border-[#eadfe1]">
+          <h3 class="bg-[#e7cfd2] py-3 text-center text-base font-bold text-[#2b2425]">{{ permission.name }}</h3>
+          <div class="flex items-center gap-4 border-b border-[#eadfe1] px-6 py-4">
+            <button
+              class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors"
+              [class.bg-[#d0123a]]="allFeaturesOn(permission.id)"
+              [class.bg-[#bdbdbd]]="!allFeaturesOn(permission.id)"
+              type="button"
+              role="switch"
+              [attr.aria-checked]="allFeaturesOn(permission.id)"
+              [attr.aria-label]="'Todo ' + permission.name"
+              (click)="toggleAll(permission.id)"
+            >
+              <span class="inline-block size-5 rounded-full bg-white shadow transition-transform" [class.translate-x-5]="allFeaturesOn(permission.id)" [class.translate-x-0.5]="!allFeaturesOn(permission.id)"></span>
+            </button>
+            <span>Todo</span>
+          </div>
+          <ul>
+            @for (feature of permission.functionalities; track feature.name) {
+              <li class="flex items-center gap-4 px-6 py-4">
+                <button
+                  class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors"
+                  [class.bg-[#d0123a]]="feature.enabled"
+                  [class.bg-[#bdbdbd]]="!feature.enabled"
+                  type="button"
+                  role="switch"
+                  [attr.aria-checked]="feature.enabled"
+                  [attr.aria-label]="feature.name"
+                  (click)="toggleFeature(permission.id, feature.name)"
+                >
+                  <span class="inline-block size-5 rounded-full bg-white shadow transition-transform" [class.translate-x-5]="feature.enabled" [class.translate-x-0.5]="!feature.enabled"></span>
+                </button>
+                <span>{{ feature.name }}</span>
+              </li>
+            }
+          </ul>
+        </article>
+      }
       <div class="mt-8 flex flex-wrap justify-end gap-4">
-        <button class="rounded-full border border-[#c4002f] px-10 py-2.5 text-sm font-semibold text-[#c4002f]" type="button" (click)="closeEditor()">Cancelar</button>
+        <button class="rounded-full border border-[#c4002f] px-10 py-2.5 text-sm font-semibold text-[#c4002f]" type="button" (click)="step.set(1)">Atrás</button>
         <button class="rounded-full bg-[#3d3536] px-10 py-2.5 text-sm font-semibold text-white disabled:opacity-60" type="button" [disabled]="saving()" (click)="save()">Guardar</button>
       </div>
     </section>

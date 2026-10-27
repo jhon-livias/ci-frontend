@@ -44,9 +44,19 @@ interface UserDraft {
 
 interface EditorPermission {
   readonly id: string;
+  readonly moduleCode: string;
   readonly name: string;
+  readonly active: boolean;
   readonly functionalities: readonly { readonly name: string; readonly enabled: boolean }[];
 }
+
+const USER_KINDS = [
+  { code: 'estudiante', label: 'Estudiante', description: 'Consulta su información y realiza sus trámites.' },
+  { code: 'docente', label: 'Docente', description: 'Trabaja con sus grupos asignados.' },
+  { code: 'asesora', label: 'Asesora', description: 'Realiza seguimiento académico de consulta.' },
+  { code: 'director', label: 'Director', description: 'Gestiona la operación académica autorizada.' },
+  { code: 'administrador', label: 'Administrador', description: 'Supervisa el sistema y administra accesos autorizados.' },
+] as const;
 
 const emptyDraft = (): UserDraft => ({
   documentType: 'DNI',
@@ -72,7 +82,8 @@ export class AdminUsersComponent implements OnInit {
   private readonly directory = inject(UserDirectoryService);
   private readonly permissionCatalog = inject(PermissionCatalogService);
   private readonly sitesCatalog = inject(SitesService);
-  protected readonly steps = [{ label: 'Editar Datos' }, { label: 'Editar Permisos' }];
+  protected readonly steps = [{ label: 'Tipo de usuario' }, { label: 'Datos' }, { label: 'Permisos' }];
+  protected readonly userKinds = USER_KINDS;
   protected readonly documentTypes: readonly UiSelectOption[] = [
     { value: 'DNI', label: 'DNI' },
     { value: 'CE', label: 'Carné de extranjería' },
@@ -109,9 +120,13 @@ export class AdminUsersComponent implements OnInit {
   protected readonly resetNotice = signal<{ id: string; username: string; password: string; mustChange: boolean } | null>(null);
   protected readonly confirmation = signal<{ message: string; details: readonly UiConfirmDetail[]; run: () => Promise<void> } | null>(null);
   protected readonly submitted = signal(false);
+  private readonly takenDocument = signal<string | null>(null);
+  private readonly takenEmail = signal<string | null>(null);
   protected readonly strictSubmit = signal(false);
   protected readonly editingId = signal<string | null>(null);
   protected readonly step = signal(0);
+  protected readonly kind = signal('');
+  protected readonly typeSubmitted = signal(false);
   protected readonly values = signal<UserDraft>(emptyDraft());
   protected readonly accountForm = form(this.values, (path) => {
     required(path.firstName, { message: 'Ingresa los nombres.' });
@@ -120,12 +135,8 @@ export class AdminUsersComponent implements OnInit {
     required(path.email, { message: 'Ingresa el correo.' });
   });
   protected readonly permissionOptions = signal<readonly EditorPermission[]>([]);
-  protected readonly selectedPermissionId = signal('');
-  protected readonly selectedPermission = computed(() => this.permissionOptions().find((item) => item.id === this.selectedPermissionId()) ?? null);
-  protected readonly allFeaturesOn = computed(() => {
-    const features = this.selectedPermission()?.functionalities ?? [];
-    return features.length > 0 && features.every((feature) => feature.enabled);
-  });
+  protected readonly visiblePermissions = computed(() => this.permissionOptions().filter((item) => item.moduleCode === this.kind() && (item.active || item.functionalities.some((feature) => feature.enabled))));
+  protected readonly kindLabel = computed(() => USER_KINDS.find((item) => item.code === this.kind())?.label ?? '');
   protected readonly siteOptions = computed(() => this.sites().map((site) => ({ value: site.id, label: site.name })));
   protected readonly crumbs = computed<readonly UiBreadcrumbItem[]>(() => this.editorOpen() || this.resetNotice()
     ? [{ label: 'Inicio', action: 'list' }, { label: 'Usuarios', action: 'list' }]
@@ -142,15 +153,15 @@ export class AdminUsersComponent implements OnInit {
     { value: '', label: 'Todos' },
     ...this.statuses().map((status) => ({ value: status.code, label: status.name })),
   ]);
-  protected readonly permissionChoices = computed(() => this.permissionOptions().map((item) => ({ value: item.id, label: item.name })));
   protected readonly siteError = computed(() => this.strictSubmit() && !this.values().siteId ? 'Selecciona una sede.' : undefined);
   protected readonly maternalError = computed(() => this.strictSubmit() && !this.values().maternalLastName.trim() ? 'Ingresa el apellido materno.' : undefined);
   protected readonly documentTypeError = computed(() => this.submitted() && !this.values().documentType ? 'Selecciona el tipo de documento.' : undefined);
   protected readonly countryError = computed(() => this.submitted() && !this.values().mobileCountry ? 'Selecciona el código de celular.' : undefined);
   protected readonly documentError = computed(() => {
-    if (!this.submitted()) return undefined;
     const draft = this.values();
     const number = draft.documentNumber.trim();
+    if (this.takenDocument() && number === this.takenDocument()) return 'Ese documento ya está registrado.';
+    if (!this.submitted()) return undefined;
     if (!number) return undefined;
     const valid = draft.documentType === 'DNI' ? /^\d{8}$/.test(number) : /^[A-Za-z0-9]{6,12}$/.test(number);
     if (valid) return undefined;
@@ -163,7 +174,8 @@ export class AdminUsersComponent implements OnInit {
   });
   protected readonly institutionalEmailMessage = INSTITUTIONAL_EMAIL_MESSAGE;
   protected readonly emailError = computed(() => {
-    const email = this.values().email.trim();
+    const email = this.values().email.trim().toLowerCase();
+    if (this.takenEmail() && email === this.takenEmail()) return 'Ese correo ya está registrado.';
     return this.submitted() && email && !institutionalEmail(email) ? INSTITUTIONAL_EMAIL_MESSAGE : undefined;
   });
   protected readonly passwordError = computed(() => {
@@ -263,9 +275,10 @@ export class AdminUsersComponent implements OnInit {
     const permissions = await this.loadPermissionCatalog();
     if (!permissions) return;
     this.editingId.set(null);
+    this.kind.set('');
+    this.typeSubmitted.set(false);
     this.values.set(emptyDraft());
     this.permissionOptions.set(permissions);
-    this.selectedPermissionId.set(permissions[0]?.id ?? '');
     this.step.set(0);
     this.editorOpen.set(true);
   }
@@ -291,15 +304,17 @@ export class AdminUsersComponent implements OnInit {
         password: '',
         enabled: detail.enabled ? 'true' : 'false',
       });
-      this.permissionOptions.set(permissions.map((permission) => ({
+      const options = permissions.map((permission) => ({
         ...permission,
         functionalities: permission.functionalities.map((feature) => ({
           name: feature.name,
           enabled: enabled.has(`${permission.id}:${feature.name.toLocaleLowerCase('es')}`),
         })),
-      })));
-      this.selectedPermissionId.set(permissions[0]?.id ?? '');
-      this.step.set(0);
+      }));
+      this.permissionOptions.set(options);
+      this.kind.set(inferKind(options));
+      this.typeSubmitted.set(false);
+      this.step.set(1);
       this.editorOpen.set(true);
     } catch {
       this.message.set('No se pudo abrir el usuario.');
@@ -382,24 +397,67 @@ export class AdminUsersComponent implements OnInit {
   protected closeEditor(): void {
     this.submitted.set(false);
     this.strictSubmit.set(false);
+    this.takenDocument.set(null);
+    this.takenEmail.set(null);
+    this.typeSubmitted.set(false);
+    this.kind.set('');
     this.editorOpen.set(false);
     this.editingId.set(null);
     this.step.set(0);
   }
 
+  protected chooseKind(code: string): void {
+    if (this.kind() === code) return;
+    this.kind.set(code);
+    this.typeSubmitted.set(false);
+    this.permissionOptions.update((items) => items.map((item) => item.moduleCode === code
+      ? item
+      : { ...item, functionalities: item.functionalities.map((feature) => ({ ...feature, enabled: false })) }));
+    this.message.set('');
+  }
+
   protected onStep(index: number): void {
-    if (index <= 0) {
-      this.step.set(0);
+    if (index === this.step()) return;
+    if (index < this.step()) {
+      this.step.set(index);
       return;
     }
-    this.next();
+    if (this.step() === 0 && !this.advanceFromType()) return;
+    if (index === 1) return;
+    this.advanceFromData();
   }
 
   protected next(): void {
+    if (this.step() === 0) {
+      this.advanceFromType();
+      return;
+    }
+    this.advanceFromData();
+  }
+
+  private advanceFromType(): boolean {
+    if (!this.kind()) {
+      this.typeSubmitted.set(true);
+      this.message.set('Elige el tipo de usuario.');
+      return false;
+    }
+    this.typeSubmitted.set(false);
+    this.message.set('');
+    this.step.set(1);
+    return true;
+  }
+
+  private advanceFromData(): void {
     const editing = this.editingId();
+    if (!this.kind()) {
+      this.typeSubmitted.set(true);
+      this.message.set('Elige el tipo de usuario.');
+      this.step.set(0);
+      return;
+    }
     if (!this.accountReady(!editing)) return;
     if (!editing) {
-      this.step.set(1);
+      this.step.set(2);
       return;
     }
     void this.persistUser(editing, this.toInput(true), 'next');
@@ -412,22 +470,29 @@ export class AdminUsersComponent implements OnInit {
     void this.persistUser(editing, this.toInput(true), 'stay');
   }
 
-  protected toggleFeature(name: string): void {
-    const id = this.selectedPermissionId();
-    this.permissionOptions.update((items) => items.map((item) => item.id === id
+  protected allFeaturesOn(permissionId: string): boolean {
+    const features = this.permissionOptions().find((item) => item.id === permissionId)?.functionalities ?? [];
+    return features.length > 0 && features.every((feature) => feature.enabled);
+  }
+
+  protected toggleFeature(permissionId: string, name: string): void {
+    this.permissionOptions.update((items) => items.map((item) => item.id === permissionId
       ? { ...item, functionalities: item.functionalities.map((feature) => feature.name === name ? { ...feature, enabled: !feature.enabled } : feature) }
       : item));
   }
 
-  protected toggleAll(): void {
-    const id = this.selectedPermissionId();
-    const enabled = !this.allFeaturesOn();
-    this.permissionOptions.update((items) => items.map((item) => item.id === id
+  protected toggleAll(permissionId: string): void {
+    const enabled = !this.allFeaturesOn(permissionId);
+    this.permissionOptions.update((items) => items.map((item) => item.id === permissionId
       ? { ...item, functionalities: item.functionalities.map((feature) => ({ ...feature, enabled })) }
       : item));
   }
 
   protected async save(): Promise<void> {
+    if (this.visiblePermissions().length === 0) {
+      this.message.set('Este tipo todavía no tiene permisos.');
+      return;
+    }
     const input = this.toInput(false);
     if (!input.grants.some((grant) => grant.enabled)) {
       this.message.set('Activa al menos una funcionalidad.');
@@ -461,11 +526,13 @@ export class AdminUsersComponent implements OnInit {
 
   private toInput(preserveAccess: boolean): UserInput {
     const draft = this.values();
-    const grants = this.permissionOptions().flatMap((permission) => permission.functionalities.map((feature) => ({
-      permissionId: permission.id,
-      name: feature.name,
-      enabled: feature.enabled,
-    })));
+    const grants = this.permissionOptions()
+      .filter((permission) => preserveAccess || permission.moduleCode === this.kind())
+      .flatMap((permission) => permission.functionalities.map((feature) => ({
+        permissionId: permission.id,
+        name: feature.name,
+        enabled: feature.enabled,
+      })));
     return {
       documentType: draft.documentType,
       documentNumber: draft.documentNumber.trim(),
@@ -486,6 +553,7 @@ export class AdminUsersComponent implements OnInit {
   private accountDetails(input: UserInput): readonly UiConfirmDetail[] {
     const site = this.siteOptions().find((item) => item.value === input.siteId)?.label ?? 'Sin sede';
     return [
+      { label: 'Tipo', value: this.kindLabel() || 'Sin tipo' },
       { label: 'Nombres', value: input.firstName },
       { label: 'Apellidos', value: `${input.paternalLastName} ${input.maternalLastName}`.trim() },
       { label: 'Documento', value: input.documentNumber },
@@ -506,11 +574,20 @@ export class AdminUsersComponent implements OnInit {
         return;
       }
       this.values.update((current) => ({ ...current, password: '' }));
-      if (after === 'next') this.step.set(1);
+      if (after === 'next') this.step.set(2);
       await this.load();
       if (!this.message()) this.message.set('Datos guardados.');
     } catch (error) {
-      this.message.set(readError(error, 'No se pudo guardar el usuario.'));
+      const text = readError(error, 'No se pudo guardar el usuario.');
+      this.message.set(text);
+      const documentTaken = text.includes('Ese documento') || text.includes('ese documento');
+      const emailTaken = text.includes('Ese correo') || text.includes('ese correo');
+      if (documentTaken || emailTaken) {
+        this.takenDocument.set(documentTaken ? input.documentNumber : null);
+        this.takenEmail.set(emailTaken ? input.email.trim().toLowerCase() : null);
+        this.submitted.set(true);
+        this.step.set(1);
+      }
     } finally {
       this.saving.set(false);
     }
@@ -526,7 +603,9 @@ export class AdminUsersComponent implements OnInit {
       }
       return items.map((item) => ({
         id: item.id,
+        moduleCode: item.moduleCode,
         name: item.name,
+        active: item.enabled,
         functionalities: item.functionalities.map((feature) => ({ name: feature.name, enabled: false })),
       }));
     } catch {
@@ -576,6 +655,25 @@ export class AdminUsersComponent implements OnInit {
     }
   }
 }
+
+const inferKind = (permissions: readonly EditorPermission[]): string => {
+  const counts = new Map<string, number>();
+  for (const permission of permissions) {
+    const enabled = permission.functionalities.filter((feature) => feature.enabled).length;
+    if (enabled === 0) continue;
+    counts.set(permission.moduleCode, (counts.get(permission.moduleCode) ?? 0) + enabled);
+  }
+  let chosen = '';
+  let best = 0;
+  for (const kind of USER_KINDS) {
+    const count = counts.get(kind.code) ?? 0;
+    if (count > best) {
+      best = count;
+      chosen = kind.code;
+    }
+  }
+  return chosen;
+};
 
 const readError = (error: unknown, fallback: string): string => {
   if (typeof error === 'object' && error !== null && 'error' in error) {

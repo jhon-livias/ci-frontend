@@ -35,6 +35,7 @@ const page = (): UserPage => ({
 describe('AdminUsersComponent', () => {
   const list = vi.fn();
   const get = vi.fn();
+  const create = vi.fn();
   const update = vi.fn();
   const resetPassword = vi.fn();
   const requirePasswordChange = vi.fn();
@@ -43,6 +44,7 @@ describe('AdminUsersComponent', () => {
   beforeEach(() => {
     list.mockReset();
     get.mockReset();
+    create.mockReset();
     update.mockReset();
     resetPassword.mockReset();
     requirePasswordChange.mockReset();
@@ -69,13 +71,16 @@ describe('AdminUsersComponent', () => {
     TestBed.configureTestingModule({
       imports: [AdminUsersComponent],
       providers: [
-        { provide: UserDirectoryService, useValue: { list, get, create: vi.fn(), update, resetPassword, requirePasswordChange, remove } },
+        { provide: UserDirectoryService, useValue: { list, get, create, update, resetPassword, requirePasswordChange, remove } },
         { provide: PermissionCatalogService, useValue: { list: vi.fn().mockResolvedValue({
           modules: [],
           page: 1,
           pageSize: 20,
-          total: 1,
-          items: [{ id: '6f1c2a40-7b2e-4c1a-9d11-0a1b2c3d4a01', moduleCode: 'estudiante', name: 'Registrar matrícula', enabled: true, functionalities: [{ name: 'Seleccionar idioma', enabled: true }] }],
+          total: 2,
+          items: [
+            { id: '6f1c2a40-7b2e-4c1a-9d11-0a1b2c3d4a01', moduleCode: 'estudiante', name: 'Registrar matrícula', enabled: true, functionalities: [{ name: 'Seleccionar idioma', enabled: true }] },
+            { id: '6f1c2a40-7b2e-4c1a-9d11-0a1b2c3d4a02', moduleCode: 'administrador', name: 'Gestionar accesos', enabled: true, functionalities: [{ name: 'Ver historial', enabled: true }] },
+          ],
         }) } },
         { provide: SitesService, useValue: { list: vi.fn().mockResolvedValue([{ id: siteId, code: 'TRUJILLO', name: 'Trujillo', location: null, active: true, districtCode: null }]) } },
       ],
@@ -129,14 +134,121 @@ describe('AdminUsersComponent', () => {
     const text = fixture.nativeElement.textContent as string;
 
     expect(text).toContain('NUEVO USUARIO');
-    expect(text).toContain('Editar Datos');
-    expect(text).toContain('Editar Permisos');
+    expect(text).toContain('Tipo de usuario');
+    expect(text).toContain('Administrador');
+    expect(text).toContain('Estudiante');
+    expect(text).not.toContain('Gestionar accesos');
     const back = [...fixture.nativeElement.querySelectorAll('button')].find((button: HTMLButtonElement) => button.textContent?.trim() === 'Volver') as HTMLButtonElement;
     back.click();
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Agregar');
     expect(fixture.nativeElement.textContent).not.toContain('NUEVO USUARIO');
+  });
+
+  it('shows only the permissions of the chosen user type', async () => {
+    create.mockResolvedValue(undefined);
+    const fixture = TestBed.createComponent(AdminUsersComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('button') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const administrator = [...fixture.nativeElement.querySelectorAll('[role="radio"]')].find((item) => (item as HTMLElement).textContent?.includes('Administrador')) as HTMLButtonElement;
+    administrator.click();
+    fixture.detectChanges();
+    ([...fixture.nativeElement.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Siguiente') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const draft = fixture.componentInstance as unknown as {
+      values: { update: (change: (current: Record<string, string>) => Record<string, string>) => void };
+    };
+    draft.values.update((current) => ({
+      ...current,
+      firstName: 'Ana',
+      paternalLastName: 'Rios',
+      maternalLastName: 'Paz',
+      documentNumber: '12345678',
+      siteId,
+      mobile: '946869590',
+      email: 'ana@uprit.edu.pe',
+      password: 'clave-segura',
+    }));
+    fixture.detectChanges();
+    ([...fixture.nativeElement.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Siguiente') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const permissions = fixture.nativeElement.textContent as string;
+
+    expect(permissions).toContain('PERMISOS');
+    expect(permissions).toContain('Gestionar accesos');
+    expect(permissions).toContain('Ver historial');
+    expect(permissions).not.toContain('Registrar matrícula');
+    expect(permissions).not.toContain('Seleccionar idioma');
+
+    (fixture.nativeElement.querySelector('[aria-label="Ver historial"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    ([...fixture.nativeElement.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Guardar') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.confirm__accept') as HTMLButtonElement).click();
+    await fixture.whenStable();
+
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({
+      grants: [{ permissionId: '6f1c2a40-7b2e-4c1a-9d11-0a1b2c3d4a02', name: 'Ver historial', enabled: true }],
+    }));
+  });
+
+  it('returns to the document when that number is already registered', async () => {
+    create.mockRejectedValue({ error: { message: 'Ese documento ya está registrado.' } });
+    const fixture = TestBed.createComponent(AdminUsersComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('button') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const component = fixture.componentInstance as unknown as {
+      step: { set: (value: number) => void };
+      kind: { set: (value: string) => void };
+      values: { set: (value: Record<string, string>) => void };
+      permissionOptions: { set: (value: unknown) => void };
+      save: () => Promise<void>;
+    };
+    component.kind.set('administrador');
+    component.step.set(2);
+    component.values.set({
+      documentType: 'DNI',
+      documentNumber: '12345678',
+      firstName: 'Ana',
+      paternalLastName: 'Rios',
+      maternalLastName: 'Paz',
+      siteId,
+      phone: '',
+      mobileCountry: '+51',
+      mobile: '946869590',
+      email: 'ana@uprit.edu.pe',
+      password: 'clave-segura',
+      enabled: 'true',
+    });
+    component.permissionOptions.set([{
+      id: '6f1c2a40-7b2e-4c1a-9d11-0a1b2c3d4a02',
+      moduleCode: 'administrador',
+      name: 'Gestionar accesos',
+      active: true,
+      functionalities: [{ name: 'Ver historial', enabled: true }],
+    }]);
+    fixture.detectChanges();
+    await component.save();
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.confirm__accept') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent as string;
+
+    expect(text).toContain('Ese documento ya está registrado.');
+    expect(text).toContain('N° de documento');
+    expect(text).toContain('Tipo: Administrador');
+    expect(text).not.toContain('Gestionar accesos');
   });
 
   it('shows the temporary password once and stores the next-login choice', async () => {
@@ -184,8 +296,11 @@ describe('AdminUsersComponent', () => {
     fixture.detectChanges();
 
     expect(update).toHaveBeenCalledWith(userId, expect.objectContaining({ firstName: 'Carlos', documentNumber: '00000000', email: 'admin@uprit.edu.pe' }));
-    expect(fixture.nativeElement.textContent).toContain('PERMISOS');
-    expect(fixture.nativeElement.textContent).toContain('Datos guardados.');
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('PERMISOS');
+    expect(text).toContain('Seleccionar idioma');
+    expect(text).not.toContain('Gestionar accesos');
+    expect(text).toContain('Datos guardados.');
   });
 
   it('saves an incomplete edit without waiting for another confirmation', async () => {
