@@ -1,0 +1,72 @@
+<h1 class="font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d] sm:text-3xl">Combo horario</h1>
+<p class="mt-2 text-sm text-[#7c8691]">Configura los días, el tipo de clase y las horas. Esos combos se eligen al crear un grupo.</p>
+@if (message()) {
+  <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
+}
+<section class="mt-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+  <h2 class="font-semibold text-[#1e1e1e]">Crear combos de días y horas</h2>
+  <div class="mt-4 space-y-3">
+    @for (day of days; track day) {
+      <div class="grid grid-cols-1 gap-3 border-b border-[#ece6e7] pb-3 md:grid-cols-4">
+        <label class="flex items-center gap-2 font-medium">
+          <input type="checkbox" [checked]="draft(day).selected" (change)="setChecked(day, $event)" />
+          {{ day }}
+        </label>
+        <label class="text-xs text-[#7c8691]">Tipo de clase
+          <select class="mt-1 h-10 w-full rounded-md border border-[#d5d0d1] px-2 text-sm" [value]="draft(day).classKind" (change)="setText(day, 'classKind', $event)">
+            <option value="">Elegir</option>
+            <option value="SYNCHRONOUS">Síncrona</option>
+            <option value="ASYNCHRONOUS">Asíncrona</option>
+          </select>
+        </label>
+        <label class="text-xs text-[#7c8691]">Hora de inicio
+          <span class="mt-1 flex gap-1">
+            <select class="h-10 w-full rounded-md border border-[#d5d0d1] px-2 text-sm" [value]="draft(day).startHour" (change)="setText(day, 'startHour', $event)">
+              <option value="">Elegir</option>
+              @for (hour of hours; track hour) { <option [value]="hour">{{ hour }}</option> }
+            </select>
+            <select class="h-10 rounded-md border border-[#d5d0d1] px-2 text-sm" [value]="draft(day).startPeriod" (change)="setText(day, 'startPeriod', $event)">
+              <option value="">Elegir</option><option>AM</option><option>PM</option>
+            </select>
+          </span>
+        </label>
+        <label class="text-xs text-[#7c8691]">Hora de salida
+          <span class="mt-1 flex gap-1">
+            <select class="h-10 w-full rounded-md border border-[#d5d0d1] px-2 text-sm" [value]="draft(day).endHour" (change)="setText(day, 'endHour', $event)">
+              <option value="">Elegir</option>
+              @for (hour of hours; track hour) { <option [value]="hour">{{ hour }}</option> }
+            </select>
+            <select class="h-10 rounded-md border border-[#d5d0d1] px-2 text-sm" [value]="draft(day).endPeriod" (change)="setText(day, 'endPeriod', $event)">
+              <option value="">Elegir</option><option>AM</option><option>PM</option>
+            </select>
+          </span>
+        </label>
+      </div>
+    }
+  </div>
+  <div class="mt-5">
+    <ui-button type="button" (click)="save()">Guardar</ui-button>
+  </div>
+  <h2 class="mt-8 font-semibold text-[#1e1e1e]">Horarios guardados</h2>
+  <div class="mt-3 overflow-x-auto">
+    <table class="w-full min-w-[40rem] text-left text-sm">
+      <thead class="bg-[#faf6f7]"><tr><th class="px-3 py-2">Nro de Horario</th><th class="px-3 py-2">Días</th><th class="px-3 py-2">Tipo de clases</th><th class="px-3 py-2">Horas</th><th class="px-3 py-2 text-center">Acción</th></tr></thead>
+      <tbody>
+        @for (combo of combos(); track combo.id) {
+          <tr class="border-b border-[#ece6e7]">
+            <td class="px-3 py-2">{{ combo.number }}</td>
+            <td class="px-3 py-2">{{ combo.days }}</td>
+            <td class="px-3 py-2">{{ combo.classTypes }}</td>
+            <td class="px-3 py-2">{{ combo.hours }}</td>
+            <td class="px-3 py-2 text-center"><button class="font-semibold text-[#a9002d] hover:underline" type="button" (click)="askRemove(combo)">Eliminar</button></td>
+          </tr>
+        } @empty {
+          <tr><td class="px-3 py-4 text-[#7c8691]" colspan="5">Aún no hay combos. Guarda uno para usarlo en un grupo.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+@if (confirmation(); as current) {
+  <ui-confirm [message]="current.message" [details]="current.details" (confirmed)="acceptConfirmation()" (cancelled)="cancelConfirmation()" />
+}

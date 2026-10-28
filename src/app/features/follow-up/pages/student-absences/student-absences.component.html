@@ -1,0 +1,61 @@
+<h1 class="font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d] sm:text-3xl">Faltas de alumnos</h1>
+<p class="mt-2 text-sm text-[#7c8691]">Consulta las faltas registradas de los alumnos. Este apartado es de consulta y no permite justificarlas.</p>
+@if (message()) {
+  <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
+}
+
+<section class="mt-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-6">
+    <ui-field id="absence-dni" label="DNI" [(value)]="documentNumber" />
+    <label class="flex flex-col gap-1 text-sm font-medium text-[#1e1e1e]">
+      Fecha
+      <input
+        id="absence-date"
+        class="h-11 rounded-md border border-[#d5d0d1] px-3 text-sm outline-none focus-visible:border-[#a9002d]"
+        type="date"
+        [value]="occurredOn()"
+        (input)="onDate($event)"
+      />
+    </label>
+    <ui-select id="absence-status" label="Estado" [options]="statusOptions" [(value)]="status" />
+    <ui-select id="absence-group" label="Grupo" [options]="groupOptions()" [(value)]="groupCode" />
+    <ui-select id="absence-language" label="Idioma" [options]="languageOptions()" [(value)]="language" />
+    <ui-select id="absence-level" label="Nivel" [options]="levelOptions()" [(value)]="level" />
+  </div>
+  <div class="mt-5 flex flex-wrap gap-3">
+    <ui-button type="button" (click)="consult()">Filtrar</ui-button>
+    <ui-button type="button" variant="soft" (click)="clear()">Limpiar</ui-button>
+  </div>
+  <div class="mt-5 overflow-x-auto">
+    <table class="w-full min-w-[48rem] text-left text-sm text-[#1e1e1e]">
+      <thead class="bg-[#faf6f7]">
+        <tr>
+          <th class="p-3" scope="col">Fecha</th>
+          <th class="p-3" scope="col">DNI</th>
+          <th class="p-3" scope="col">Alumno</th>
+          <th class="p-3" scope="col">Grupo</th>
+          <th class="p-3" scope="col">Idioma</th>
+          <th class="p-3" scope="col">Nivel</th>
+          <th class="p-3" scope="col">Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of visible(); track row.id) {
+          <tr class="border-b border-[#ece6e7]">
+            <td class="p-3">{{ row.occurredOn }}</td>
+            <td class="p-3">{{ row.documentNumber }}</td>
+            <td class="p-3 font-medium">{{ row.studentName }}</td>
+            <td class="p-3">{{ row.groupCode }}</td>
+            <td class="p-3">{{ row.language }}</td>
+            <td class="p-3">{{ row.level }}</td>
+            <td class="p-3">{{ row.status }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td class="p-5 text-[#7c8691]" colspan="7">Aún no hay faltas registradas.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

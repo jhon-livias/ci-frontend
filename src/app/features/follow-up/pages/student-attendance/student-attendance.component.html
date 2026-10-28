@@ -1,0 +1,79 @@
+<h1 class="font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d] sm:text-3xl">Asistencias y notas de alumnos</h1>
+<p class="mt-2 text-sm text-[#7c8691]">Consulta y seguimiento de la asistencia de los alumnos.</p>
+@if (message()) {
+  <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
+}
+
+<div class="mt-6 rounded-xl border border-[#f1c9d1] bg-[#fdecef] p-4">
+  <p class="font-medium text-[#92001f]">Seguimiento de asistencia</p>
+  <p class="mt-1 text-sm text-[#92001f]">
+    Los alumnos que alcanzan el {{ limit() }} % de inasistencias quedan inhabilitados. El semáforo permite identificar el nivel de seguimiento de cada alumno. La tabla permite consultar el detalle individual cuando existan registros.
+  </p>
+</div>
+
+<section class="mt-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]" aria-label="Filtros de consulta">
+  <h2 class="text-lg font-bold text-[#1e1e1e]">Filtros de consulta</h2>
+  <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-5">
+    <ui-field id="student-dni" label="DNI" [(value)]="documentNumber" />
+    <ui-select id="student-group-status" label="Estado de grupo" [options]="groupStatusOptions" [(value)]="groupStatus" />
+    <ui-select id="student-language" label="Idioma" [options]="languageOptions()" [(value)]="language" />
+    <ui-select id="student-level" label="Nivel" [options]="levelOptions()" [(value)]="level" />
+    <ui-select id="student-group" label="Grupo" [options]="groupOptions()" [(value)]="groupCode" />
+  </div>
+  <div class="mt-6 flex flex-wrap gap-3">
+    <ui-button type="button" (click)="consult()">Consultar</ui-button>
+    <ui-button type="button" variant="soft" (click)="clear()">Limpiar</ui-button>
+  </div>
+</section>
+
+<section class="mt-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]" aria-label="Estado de asistencia">
+  <h2 class="font-semibold text-[#1e1e1e]">Estado de asistencia</h2>
+  <ul class="mt-4 flex flex-wrap gap-6 text-sm text-[#1e1e1e]">
+    <li class="flex items-center gap-2"><span class="size-4 rounded-full bg-[#1f8a4c]"></span> Verde: 1% - 5% de inasistencia</li>
+    <li class="flex items-center gap-2"><span class="size-4 rounded-full bg-[#c89600]"></span> Amarillo: 6% - 15% de inasistencia</li>
+    <li class="flex items-center gap-2"><span class="size-4 rounded-full bg-[#d97706]"></span> Naranja: 16% - 29% de inasistencia</li>
+    <li class="flex items-center gap-2"><span class="size-4 rounded-full bg-[#a9002d]"></span> Rojo: {{ limit() }} % o más: inhabilitado</li>
+  </ul>
+</section>
+
+<section class="mt-6 overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgb(30_30_30_/_8%)]" aria-label="Resultados de asistencia">
+  <div class="border-b border-[#ece6e7] px-6 py-4">
+    <h2 class="font-semibold text-[#1e1e1e]">Resultados de asistencia</h2>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[56rem] text-left text-sm text-[#1e1e1e]">
+      <thead class="border-b border-[#ece6e7] bg-[#faf6f7]">
+        <tr>
+          <th class="px-5 py-4" scope="col">Estado</th>
+          <th class="px-5 py-4" scope="col">Código</th>
+          <th class="px-5 py-4" scope="col">DNI</th>
+          <th class="px-5 py-4" scope="col">Alumno</th>
+          <th class="px-5 py-4" scope="col">Idioma</th>
+          <th class="px-5 py-4" scope="col">Nivel</th>
+          <th class="px-5 py-4" scope="col">Grupo</th>
+          <th class="px-5 py-4" scope="col">% Inasistencia</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of visible(); track row.id) {
+          <tr class="border-b border-[#ece6e7]">
+            <td class="px-5 py-4">
+              <span class="inline-block size-4 rounded-full" [class.bg-[#1f8a4c]]="tone(row.absencePercent) === 'green'" [class.bg-[#c89600]]="tone(row.absencePercent) === 'yellow'" [class.bg-[#d97706]]="tone(row.absencePercent) === 'orange'" [class.bg-[#a9002d]]="tone(row.absencePercent) === 'red'" [attr.title]="tone(row.absencePercent)"></span>
+            </td>
+            <td class="px-5 py-4">{{ row.code }}</td>
+            <td class="px-5 py-4">{{ row.documentNumber }}</td>
+            <td class="px-5 py-4 font-medium">{{ row.studentName }}</td>
+            <td class="px-5 py-4">{{ row.language }}</td>
+            <td class="px-5 py-4">{{ row.level }}</td>
+            <td class="px-5 py-4">{{ row.groupCode }}</td>
+            <td class="px-5 py-4 font-semibold">{{ row.absencePercent }} %</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td class="px-5 py-6 text-[#7c8691]" colspan="8">Aún no hay asistencias de alumnos. Aparecerán cuando el docente registre las clases de un grupo aperturado.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

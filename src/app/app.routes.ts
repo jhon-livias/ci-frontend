@@ -2,8 +2,12 @@ import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
 import { AuthSessionService } from './core/auth/auth-session.service';
 import { administratorGuard } from './core/auth/administrator.guard';
+import { advisorGuard } from './core/auth/advisor.guard';
+import { directorGuard } from './core/auth/director.guard';
 import {
   administratorMatchGuard,
+  advisorMatchGuard,
+  directorMatchGuard,
   anonymousGuard,
   authenticatedGuard,
   passwordChangeGuard,
@@ -137,14 +141,105 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'asesoria/asistencias-alumnos',
+    title: 'Asistencias y notas de alumnos | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, advisorGuard],
+    data: { section: 'students' },
+    loadComponent: () =>
+      import('./features/advisor/pages/advisor-home/advisor-home.component').then((module) => module.AdvisorHomeComponent),
+  },
+  {
+    path: 'asesoria/asistencias-docentes',
+    title: 'Asistencia de docentes | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, advisorGuard],
+    data: { section: 'teachers' },
+    loadComponent: () =>
+      import('./features/advisor/pages/advisor-home/advisor-home.component').then((module) => module.AdvisorHomeComponent),
+  },
+  {
+    path: 'asesoria/faltas-alumnos',
+    title: 'Faltas de alumnos | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, advisorGuard],
+    data: { section: 'absences' },
+    loadComponent: () =>
+      import('./features/advisor/pages/advisor-home/advisor-home.component').then((module) => module.AdvisorHomeComponent),
+  },
+  {
+    path: 'direccion/alumnos',
+    title: 'Alumnos | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, directorGuard],
+    data: { section: 'students' },
+    loadComponent: () =>
+      import('./features/director/pages/director-home/director-home.component').then((module) => module.DirectorHomeComponent),
+  },
+  {
+    path: 'direccion/docentes',
+    title: 'Gestión de docentes | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, directorGuard],
+    data: { section: 'teachers' },
+    loadComponent: () =>
+      import('./features/director/pages/director-home/director-home.component').then((module) => module.DirectorHomeComponent),
+  },
+  {
+    path: 'direccion/seguimiento-docentes',
+    title: 'Seguimiento de docentes | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, directorGuard],
+    data: { section: 'teacher-follow' },
+    loadComponent: () =>
+      import('./features/director/pages/director-home/director-home.component').then((module) => module.DirectorHomeComponent),
+  },
+  {
+    path: 'direccion/justificacion-docentes',
+    title: 'Justificación de docentes | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, directorGuard],
+    data: { section: 'justifications' },
+    loadComponent: () =>
+      import('./features/director/pages/director-home/director-home.component').then((module) => module.DirectorHomeComponent),
+  },
+  {
+    path: 'direccion/grupos',
+    title: 'Gestión de grupos | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, directorGuard],
+    data: { section: 'groups' },
+    loadComponent: () =>
+      import('./features/director/pages/director-home/director-home.component').then((module) => module.DirectorHomeComponent),
+  },
+  {
+    path: 'direccion/combos',
+    title: 'Combo horario | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, directorGuard],
+    data: { section: 'schedules' },
+    loadComponent: () =>
+      import('./features/director/pages/director-home/director-home.component').then((module) => module.DirectorHomeComponent),
+  },
+  {
     path: 'perfil',
     title: 'Perfil | Centro de Idiomas UPRIT',
-    canActivate: [authenticatedGuard, administratorGuard],
+    canMatch: [administratorMatchGuard],
+    canActivate: [authenticatedGuard],
     data: { section: 'profile' },
     loadComponent: () =>
       import('./features/admin/pages/administrator-home/administrator-home.component').then(
         (module) => module.AdministratorHomeComponent,
       ),
+  },
+  {
+    path: 'perfil',
+    title: 'Perfil | Centro de Idiomas UPRIT',
+    canMatch: [advisorMatchGuard],
+    canActivate: [authenticatedGuard],
+    data: { section: 'profile' },
+    loadComponent: () =>
+      import('./features/advisor/pages/advisor-home/advisor-home.component').then((module) => module.AdvisorHomeComponent),
+  },
+  {
+    path: 'perfil',
+    title: 'Perfil | Centro de Idiomas UPRIT',
+    canMatch: [directorMatchGuard],
+    canActivate: [authenticatedGuard],
+    data: { section: 'profile' },
+    loadComponent: () =>
+      import('./features/director/pages/director-home/director-home.component').then((module) => module.DirectorHomeComponent),
   },
   {
     path: 'inicio',
@@ -155,6 +250,24 @@ export const routes: Routes = [
       import('./features/admin/pages/administrator-home/administrator-home.component').then(
         (module) => module.AdministratorHomeComponent,
       ),
+  },
+  {
+    path: 'inicio',
+    title: 'Inicio | Centro de Idiomas UPRIT',
+    canMatch: [advisorMatchGuard],
+    canActivate: [authenticatedGuard],
+    data: { section: 'home' },
+    loadComponent: () =>
+      import('./features/advisor/pages/advisor-home/advisor-home.component').then((module) => module.AdvisorHomeComponent),
+  },
+  {
+    path: 'inicio',
+    title: 'Inicio | Centro de Idiomas UPRIT',
+    canMatch: [directorMatchGuard],
+    canActivate: [authenticatedGuard],
+    data: { section: 'home' },
+    loadComponent: () =>
+      import('./features/director/pages/director-home/director-home.component').then((module) => module.DirectorHomeComponent),
   },
   {
     path: 'inicio',

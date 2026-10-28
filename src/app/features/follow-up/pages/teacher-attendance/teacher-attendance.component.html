@@ -1,0 +1,56 @@
+<h1 class="font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d] sm:text-3xl">Asistencia de docentes</h1>
+<p class="mt-2 text-sm text-[#7c8691]">Consulta y seguimiento de la asistencia de los docentes.</p>
+@if (message()) {
+  <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
+}
+
+<section class="mt-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]" aria-label="Filtros de consulta">
+  <h2 class="text-lg font-bold text-[#1e1e1e]">Filtros de consulta</h2>
+  <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-5">
+    <ui-field id="teacher-dni" label="DNI" [(value)]="documentNumber" />
+    <ui-select id="teacher-group-status" label="Estado de grupo" [options]="groupStatusOptions" [(value)]="groupStatus" />
+    <ui-select id="teacher-language" label="Idioma" [options]="languageOptions()" [(value)]="language" />
+    <ui-select id="teacher-level" label="Nivel" [options]="levelOptions()" [(value)]="level" />
+    <ui-select id="teacher-group" label="Grupo" [options]="groupOptions()" [(value)]="groupCode" />
+  </div>
+  <div class="mt-6 flex flex-wrap gap-3">
+    <ui-button type="button" (click)="consult()">Consultar</ui-button>
+    <ui-button type="button" variant="soft" (click)="clear()">Limpiar</ui-button>
+  </div>
+</section>
+
+<section class="mt-6 overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgb(30_30_30_/_8%)]" aria-label="Resultados de asistencia">
+  <div class="border-b border-[#ece6e7] px-6 py-4">
+    <h2 class="font-semibold text-[#1e1e1e]">Resultados de asistencia</h2>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[48rem] text-left text-sm text-[#1e1e1e]">
+      <thead class="border-b border-[#ece6e7] bg-[#faf6f7]">
+        <tr>
+          <th class="px-5 py-4" scope="col">DNI</th>
+          <th class="px-5 py-4" scope="col">Docente</th>
+          <th class="px-5 py-4" scope="col">Idioma</th>
+          <th class="px-5 py-4" scope="col">Nivel</th>
+          <th class="px-5 py-4" scope="col">Grupo</th>
+          <th class="px-5 py-4" scope="col">% Asistencia</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of visible(); track row.id) {
+          <tr class="border-b border-[#ece6e7]">
+            <td class="px-5 py-4">{{ row.documentNumber }}</td>
+            <td class="px-5 py-4 font-medium">{{ row.teacherName }}</td>
+            <td class="px-5 py-4">{{ row.language }}</td>
+            <td class="px-5 py-4">{{ row.level }}</td>
+            <td class="px-5 py-4">{{ row.groupCode }}</td>
+            <td class="px-5 py-4 font-semibold">{{ row.attendancePercent }} %</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td class="px-5 py-6 text-[#7c8691]" colspan="6">Aún no hay asistencias de docentes. Aparecerán cuando se registren las clases de un grupo aperturado.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

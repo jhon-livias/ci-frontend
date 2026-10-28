@@ -32,3 +32,9 @@ export const anonymousGuard: CanActivateFn = () => {
 /** Lets the administrative implementation match only for its authorized role. */
 export const administratorMatchGuard: CanMatchFn = () =>
   inject(AuthSessionService).hasRole('ADMINISTRATOR');
+
+/** Lets the advisor portal match only for academic follow-up. */
+export const advisorMatchGuard: CanMatchFn = () => inject(AuthSessionService).hasRole('ADVISOR');
+
+/** Lets the director portal match only for academic operations. */
+export const directorMatchGuard: CanMatchFn = () => inject(AuthSessionService).hasRole('DIRECTOR');

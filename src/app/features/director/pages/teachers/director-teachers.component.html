@@ -1,0 +1,71 @@
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <div>
+    <h1 class="font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d] sm:text-3xl">Gestión de docentes</h1>
+    <p class="mt-2 text-sm text-[#7c8691]">Registro y administración de los docentes del Centro de Idiomas.</p>
+  </div>
+  <ui-button type="button" (click)="startCreate()">Crear docente</ui-button>
+</div>
+@if (message()) {
+  <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
+}
+@if (password()) {
+  <p class="mt-4 rounded-xl bg-[#fdecef] p-4 text-sm text-[#92001f]">Contraseña temporal: <b>{{ password() }}</b>. El docente deberá cambiarla al ingresar.</p>
+}
+<section class="mt-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+  <h2 class="font-semibold">Buscar docente</h2>
+  <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+    <ui-field id="teacher-filter-dni" label="DNI" [(value)]="queryDni" />
+    <div class="md:col-span-2"><ui-field id="teacher-filter-name" label="Nombres o apellidos" [(value)]="queryName" /></div>
+  </div>
+  <div class="mt-4 flex gap-3">
+    <ui-button type="button" (click)="consult()">Buscar</ui-button>
+    <ui-button type="button" variant="soft" (click)="clear()">Limpiar</ui-button>
+  </div>
+</section>
+<section class="mt-6 overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[56rem] text-left text-sm">
+      <thead class="bg-[#faf6f7]"><tr><th class="px-5 py-4">DNI</th><th class="px-5 py-4">Nombres</th><th class="px-5 py-4">Apellidos</th><th class="px-5 py-4">Teléfono</th><th class="px-5 py-4">Correo</th><th class="px-5 py-4">Grado académico</th><th class="px-5 py-4 text-center">Acciones</th></tr></thead>
+      <tbody>
+        @for (row of visible(); track row.id) {
+          <tr class="border-b border-[#ece6e7]">
+            <td class="px-5 py-4">{{ row.documentNumber }}</td>
+            <td class="px-5 py-4">{{ row.firstName }}</td>
+            <td class="px-5 py-4">{{ row.lastNames }}</td>
+            <td class="px-5 py-4">{{ row.phone }}</td>
+            <td class="px-5 py-4">{{ row.email }}</td>
+            <td class="px-5 py-4">{{ row.academicDegree }}</td>
+            <td class="px-5 py-4 text-center">
+              <button class="mr-3 font-semibold text-[#a9002d] hover:underline" type="button" (click)="startEdit(row)">Editar</button>
+              <button class="font-semibold text-[#a9002d] hover:underline" type="button" (click)="askRemove(row)">Eliminar</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td class="px-5 py-6 text-[#7c8691]" colspan="7">Aún no hay docentes.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+@if (open()) {
+  <div class="fixed inset-0 z-40 grid place-items-center bg-black/40 p-4">
+    <div class="w-full max-w-lg rounded-xl bg-white p-6">
+      <h2 class="text-xl font-semibold">{{ editingId() ? 'Editar docente' : 'Crear docente' }}</h2>
+      <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <ui-field id="cd-nombres" label="Nombres" [value]="draft().firstName" (valueChange)="set('firstName', $event)" />
+        <ui-field id="cd-apellidos" label="Apellidos" [value]="draft().lastNames" (valueChange)="set('lastNames', $event)" />
+        <ui-field id="cd-dni" label="DNI" [value]="draft().documentNumber" (valueChange)="set('documentNumber', $event)" />
+        <ui-field id="cd-telefono" label="Teléfono" [value]="draft().phone" (valueChange)="set('phone', $event)" />
+        <div class="md:col-span-2"><ui-field id="cd-correo" label="Correo" [value]="draft().email" (valueChange)="set('email', $event)" /></div>
+        <div class="md:col-span-2"><ui-field id="cd-grado" label="Grado académico" [value]="draft().academicDegree" (valueChange)="set('academicDegree', $event)" /></div>
+      </div>
+      <div class="mt-6 flex justify-end gap-3">
+        <ui-button type="button" variant="soft" (click)="open.set(false)">Cancelar</ui-button>
+        <ui-button type="button" (click)="save()">Guardar docente</ui-button>
+      </div>
+    </div>
+  </div>
+}
+@if (confirmation(); as current) {
+  <ui-confirm [message]="current.message" [details]="current.details" (confirmed)="acceptConfirmation()" (cancelled)="cancelConfirmation()" />
+}

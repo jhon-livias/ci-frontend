@@ -1,0 +1,109 @@
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <div>
+    <h1 class="font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d] sm:text-3xl">Gestión de grupos</h1>
+    <p class="mt-2 text-sm text-[#7c8691]">Creación y seguimiento de los grupos de clase.</p>
+  </div>
+  <ui-button type="button" (click)="startCreate()">Crear grupo</ui-button>
+</div>
+<div class="mt-6 rounded-xl border border-[#cfe3f5] bg-[#eff6ff] p-4 text-sm text-[#1e4b7a]">
+  Un grupo se crea con estado <b>Creado</b>. Cuando tiene más de 30 y hasta 50 alumnos matriculados, puede aperturarse. Si llegada la fecha de inicio no se alcanza el mínimo, el grupo puede reprogramarse.
+</div>
+@if (message()) {
+  <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
+}
+<section class="mt-6 overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[48rem] text-left text-sm">
+      <thead class="bg-[#faf6f7]"><tr><th class="px-5 py-4">Código</th><th class="px-5 py-4">Idioma</th><th class="px-5 py-4">Nivel</th><th class="px-5 py-4">Docente</th><th class="px-5 py-4">Estado</th><th class="px-5 py-4 text-center">Acciones</th></tr></thead>
+      <tbody>
+        @for (group of groups(); track group.id) {
+          <tr class="border-b border-[#ece6e7]">
+            <td class="px-5 py-4 font-medium">{{ group.code }}</td>
+            <td class="px-5 py-4">{{ group.language }}</td>
+            <td class="px-5 py-4">{{ group.level }}</td>
+            <td class="px-5 py-4">{{ group.teacherName }}</td>
+            <td class="px-5 py-4">{{ group.statusLabel }}</td>
+            <td class="px-5 py-4 text-center">
+              <button class="mr-3 font-semibold text-[#a9002d] hover:underline" type="button" (click)="viewing.set(group)">Ver</button>
+              @if (group.status === 'CREATED' || group.status === 'RESCHEDULED') {
+                <button class="mr-3 font-semibold text-[#a9002d] hover:underline" type="button" (click)="startEdit(group)">Actualizar</button>
+                <button class="font-semibold text-[#a9002d] hover:underline" type="button" (click)="startReschedule(group)">Reprogramar</button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr><td class="px-5 py-6 text-[#7c8691]" colspan="6">Aún no hay grupos.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+
+@if (open()) {
+  <div class="fixed inset-0 z-40 grid place-items-center bg-black/40 p-4">
+    <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6">
+      <h2 class="text-xl font-semibold">{{ editingId() ? 'Actualizar grupo' : 'Crear grupo' }}</h2>
+      <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <ui-select id="group-kind" label="Tipo de grupo" [options]="kindOptions" [value]="draft().kind" (valueChange)="set('kind', $event)" />
+        <ui-field id="group-code" label="Código de grupo" [value]="draft().code" (valueChange)="set('code', $event)" />
+        <ui-select id="group-language" label="Idioma" [options]="languageOptions()" [value]="draft().language" (valueChange)="set('language', $event)" />
+        @if (!isProficiency()) {
+          <ui-select id="group-level" label="Nivel" [options]="levelOptions()" [value]="draft().level" (valueChange)="set('level', $event)" />
+        }
+        <label class="text-sm font-medium">Fecha de inicio<input class="mt-1 h-11 w-full rounded-md border border-[#d5d0d1] px-3" type="date" [value]="draft().startsAt" (input)="setDate('startsAt', $event)" /></label>
+        <label class="text-sm font-medium">Fecha final<input class="mt-1 h-11 w-full rounded-md border border-[#d5d0d1] px-3" type="date" [value]="draft().endsAt" (input)="setDate('endsAt', $event)" /></label>
+        <ui-field id="group-dni" label="DNI del docente" [value]="draft().teacherDocument" (valueChange)="set('teacherDocument', $event)" />
+        <p class="self-end text-sm text-[#7c8691]">{{ teacherLabel() }}</p>
+        <ui-select id="group-modality" label="Modalidad" [options]="modalityOptions()" [value]="draft().modality" (valueChange)="set('modality', $event)" />
+        @if (!isProficiency()) {
+          <ui-select id="group-study" label="Tipo de estudio" [options]="studyOptions()" [value]="draft().studyType" (valueChange)="set('studyType', $event)" />
+          <ui-field id="group-meet" label="Link de clase" [value]="draft().meetUrl" (valueChange)="set('meetUrl', $event)" />
+          <ui-select id="group-days" label="Combo de días" [options]="dayComboOptions()" [value]="draft().dayComboId" (valueChange)="set('dayComboId', $event)" />
+          <ui-select id="group-hours" label="Combo de horas" [options]="hourComboOptions()" [value]="draft().hourComboId" (valueChange)="set('hourComboId', $event)" />
+        }
+      </div>
+      <div class="mt-6 flex justify-end gap-3">
+        <ui-button type="button" variant="soft" (click)="open.set(false)">Cancelar</ui-button>
+        <ui-button type="button" (click)="save()">Guardar</ui-button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (rescheduleId()) {
+  <div class="fixed inset-0 z-40 grid place-items-center bg-black/40 p-4">
+    <div class="w-full max-w-md rounded-xl bg-white p-6">
+      <h2 class="text-xl font-semibold">Reprogramar grupo</h2>
+      <div class="mt-4 grid gap-4">
+        <label class="text-sm font-medium">Fecha de inicio<input class="mt-1 h-11 w-full rounded-md border border-[#d5d0d1] px-3" type="date" [value]="draft().startsAt" (input)="setDate('startsAt', $event)" /></label>
+        <label class="text-sm font-medium">Fecha final<input class="mt-1 h-11 w-full rounded-md border border-[#d5d0d1] px-3" type="date" [value]="draft().endsAt" (input)="setDate('endsAt', $event)" /></label>
+      </div>
+      <div class="mt-6 flex justify-end gap-3">
+        <ui-button type="button" variant="soft" (click)="rescheduleId.set('')">Cancelar</ui-button>
+        <ui-button type="button" (click)="saveReschedule()">Guardar</ui-button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (viewing(); as group) {
+  <div class="fixed inset-0 z-40 grid place-items-center bg-black/40 p-4">
+    <div class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white p-6">
+      <div class="flex justify-between">
+        <h2 class="text-xl font-semibold">Grupo {{ group.code }}</h2>
+        <button type="button" (click)="viewing.set(null)">Cerrar</button>
+      </div>
+      <div class="mt-4 space-y-1 text-sm">
+        <p><b>Idioma:</b> {{ group.language }}</p>
+        <p><b>Nivel:</b> {{ group.level }}</p>
+        <p><b>Tipo:</b> {{ group.kindLabel }}</p>
+        <p><b>Modalidad:</b> {{ group.modality }}</p>
+        <p><b>Horario:</b> {{ group.schedule }}</p>
+        <p><b>Docente:</b> {{ group.teacherName }} ({{ group.teacherDocument }})</p>
+        <p><b>Estado:</b> {{ group.statusLabel }}</p>
+        <p><b>Matriculados:</b> {{ group.enrolledCount }}</p>
+      </div>
+      <p class="mt-6 text-sm text-[#7c8691]">Aún no hay alumnos matriculados. El alta web y la matrícula manual se habilitan cuando exista el pago.</p>
+    </div>
+  </div>
+}

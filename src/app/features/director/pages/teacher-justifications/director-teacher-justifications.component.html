@@ -1,0 +1,47 @@
+<h1 class="font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d] sm:text-3xl">Justificación de docentes</h1>
+<p class="mt-2 text-sm text-[#7c8691]">Registro y seguimiento de las justificaciones de faltas de los docentes. La descripción y el documento son obligatorios al justificar.</p>
+<section class="mt-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <ui-field id="just-dni" label="DNI o código de docente" [(value)]="query" />
+    <label class="block">
+      <span class="mb-1.5 block text-sm font-medium text-[#1e1e1e]">Fecha</span>
+      <input class="h-11 w-full rounded-lg border border-[#ece6e7] px-3" type="date" [value]="date()" (input)="setDate($event)" />
+    </label>
+    <label class="block">
+      <span class="mb-1.5 block text-sm font-medium text-[#1e1e1e]">Estado</span>
+      <select class="h-11 w-full rounded-lg border border-[#ece6e7] px-3" [value]="status()" (change)="setStatus($event)">
+        <option value="">Todos los estados</option>
+        <option value="Injustificado">Injustificado</option>
+        <option value="Justificado">Justificado</option>
+      </select>
+    </label>
+  </div>
+  <div class="mt-4 flex gap-3">
+    <ui-button type="button" (click)="consult()">Consultar</ui-button>
+    <ui-button type="button" variant="soft" (click)="clear()">Limpiar</ui-button>
+  </div>
+</section>
+<section class="mt-6 overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[56rem] text-left text-sm">
+      <thead class="bg-[#faf6f7]">
+        <tr>
+          <th class="px-5 py-4">Fecha de falta</th>
+          <th class="px-5 py-4">Código</th>
+          <th class="px-5 py-4">DNI</th>
+          <th class="px-5 py-4">Docente</th>
+          <th class="px-5 py-4">Idioma</th>
+          <th class="px-5 py-4">Nivel</th>
+          <th class="px-5 py-4">Grupo</th>
+          <th class="px-5 py-4">Estado</th>
+          <th class="px-5 py-4 text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="px-5 py-6 text-[#7c8691]" colspan="9">Aún no hay faltas de docentes. Aparecerán cuando se registre asistencia en un grupo aperturado. El estado inicial será Injustificado.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
