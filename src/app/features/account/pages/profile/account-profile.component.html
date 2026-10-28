@@ -1,0 +1,154 @@
+<p class="text-xs text-[#7c8691]">Perfil</p>
+<h1 class="mt-3 font-[var(--font-heading)] text-2xl font-bold uppercase tracking-wide text-[#a9002d] sm:text-[28px]">Perfil académico</h1>
+<p class="mt-3 font-[var(--font-heading)] text-3xl font-semibold tracking-tight text-[#1e1e1e] sm:text-4xl">{{ headingName() }}</p>
+
+<div class="mt-6 flex flex-wrap gap-3" role="tablist" aria-label="Secciones del perfil">
+  <button class="rounded-md px-4 py-2 text-sm font-semibold" [class.bg-[#7a1228]]="tab() === 'personal'" [class.text-white]="tab() === 'personal'" [class.border]="tab() !== 'personal'" [class.border-[#a9002d]]="tab() !== 'personal'" [class.bg-white]="tab() !== 'personal'" [class.text-[#a9002d]]="tab() !== 'personal'" type="button" role="tab" [attr.aria-selected]="tab() === 'personal'" (click)="selectTab('personal')">Datos del alumno</button>
+  <button class="rounded-md border px-4 py-2 text-sm font-semibold" [class.bg-[#7a1228]]="tab() === 'academic'" [class.text-white]="tab() === 'academic'" [class.border-[#7a1228]]="tab() === 'academic'" [class.border-[#a9002d]]="tab() !== 'academic'" [class.bg-white]="tab() !== 'academic'" [class.text-[#a9002d]]="tab() !== 'academic'" type="button" role="tab" [attr.aria-selected]="tab() === 'academic'" (click)="selectTab('academic')">Datos académicos</button>
+  <button class="rounded-md border px-4 py-2 text-sm font-semibold" [class.bg-[#7a1228]]="tab() === 'settings'" [class.text-white]="tab() === 'settings'" [class.border-[#7a1228]]="tab() === 'settings'" [class.border-[#a9002d]]="tab() !== 'settings'" [class.bg-white]="tab() !== 'settings'" [class.text-[#a9002d]]="tab() !== 'settings'" type="button" role="tab" [attr.aria-selected]="tab() === 'settings'" (click)="selectTab('settings')">Configuración</button>
+</div>
+
+@if (notice()) {
+  <p class="mt-4 text-sm font-semibold" [class.text-[#1d7a3a]]="noticeTone() === 'ok'" [class.text-[#92001f]]="noticeTone() === 'error'" role="status">{{ notice() }}</p>
+}
+
+@if (loading()) {
+  <p class="mt-8 text-sm text-[#5e5254]" role="status">Cargando perfil…</p>
+} @else if (tab() === 'personal') {
+  @if (draft(); as draft) {
+  <form class="mt-6 rounded-[28px] bg-white px-6 py-8 shadow-[0_8px_24px_rgb(30_30_30_/_8%)] sm:px-10" (submit)="$event.preventDefault(); saveProfile()">
+    <div class="grid gap-5">
+      <div>
+        <span class="mb-2 block text-sm text-[#6d6567]">Nombres</span>
+        <p class="flex h-12 items-center rounded-lg bg-[#d5d5d5] px-4 text-sm text-[#3f3a3b]">{{ profile()?.firstName }}</p>
+      </div>
+      <div class="grid gap-5 md:grid-cols-2">
+        <div>
+          <span class="mb-2 block text-sm text-[#6d6567]">Apellido Paterno</span>
+          <p class="flex h-12 items-center rounded-lg bg-[#d5d5d5] px-4 text-sm text-[#3f3a3b]">{{ profile()?.paternalLastName }}</p>
+        </div>
+        <div>
+          <span class="mb-2 block text-sm text-[#6d6567]">Apellido Materno</span>
+          <p class="flex h-12 items-center rounded-lg bg-[#d5d5d5] px-4 text-sm text-[#3f3a3b]">{{ profile()?.maternalLastName }}</p>
+        </div>
+      </div>
+      <div class="grid gap-5 md:grid-cols-3">
+        <div class="relative" (focusout)="closeMenu($event, 'gender')">
+          <span class="mb-2 block text-sm text-[#6d6567]" id="profile-gender-label"><span class="text-[#c4002f]">*</span> Género</span>
+          <button class="flex h-12 w-full items-center justify-between rounded-lg border border-[#e6e6e6] bg-white px-4 text-sm text-[#1e1e1e]" type="button" aria-labelledby="profile-gender-label" [attr.aria-expanded]="menu() === 'gender'" (click)="toggleMenu('gender')">
+            <span [class.text-[#8a8082]]="!draft.gender">{{ label(genders, draft.gender, 'Seleccionar') }}</span>
+            <svg aria-hidden="true" class="size-4 text-[#6d6567]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg>
+          </button>
+          @if (menu() === 'gender') {
+            <ul class="absolute left-0 right-0 top-[calc(100%+4px)] z-20 overflow-hidden rounded-lg border border-[#eee] bg-white py-1 shadow-[0_8px_24px_rgb(0_0_0_/_12%)]" role="listbox">
+              @for (option of genders; track option.value) {
+                <li><button class="block w-full px-3 py-2 text-center text-sm hover:bg-[#f4d5dc]" [class.bg-[#f4d5dc]]="draft.gender === option.value" type="button" role="option" (mousedown)="$event.preventDefault()" (click)="choose('gender', option.value)">{{ option.label }}</button></li>
+              }
+            </ul>
+          }
+        </div>
+        <div>
+          <span class="mb-2 block text-sm text-[#6d6567]">{{ documentLabel() }}</span>
+          <p class="flex h-12 items-center rounded-lg bg-[#d5d5d5] px-4 text-sm text-[#3f3a3b]">{{ profile()?.documentNumber }}</p>
+        </div>
+        <div>
+          <label class="mb-2 block text-sm text-[#6d6567]" for="profile-birth-date"><span class="text-[#c4002f]">*</span> Fecha de Nacimiento</label>
+          <input class="h-12 w-full rounded-lg border border-[#e6e6e6] bg-white px-4 text-sm text-[#1e1e1e] outline-none focus:border-[#a9002d]" id="profile-birth-date" type="date" [value]="draft.birthDate" (input)="setText('birthDate', $event)" />
+        </div>
+      </div>
+      <div class="grid gap-5 md:grid-cols-2">
+        <div>
+          <span class="mb-2 block text-sm text-[#6d6567]" id="profile-mobile-label"><span class="text-[#c4002f]">*</span> Celular</span>
+          <div class="flex gap-2">
+            <div class="relative w-32 shrink-0" (focusout)="closeMenu($event, 'country')">
+              <button class="flex h-12 w-full items-center justify-between rounded-lg border border-[#e6e6e6] bg-white px-3 text-sm" type="button" aria-labelledby="profile-mobile-label" [attr.aria-expanded]="menu() === 'country'" (click)="toggleMenu('country')">
+                <span>{{ label(countries, draft.mobileCountry, '🇵🇪 +51') }}</span>
+                <svg aria-hidden="true" class="size-4 text-[#6d6567]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg>
+              </button>
+              @if (menu() === 'country') {
+                <ul class="absolute left-0 z-20 mt-1 max-h-56 w-40 overflow-auto rounded-lg border border-[#eee] bg-white py-1 shadow-[0_8px_24px_rgb(0_0_0_/_12%)]" role="listbox">
+                  @for (option of countries; track option.value) {
+                    <li><button class="block w-full px-3 py-2 text-center text-sm hover:bg-[#f4d5dc]" [class.bg-[#f4d5dc]]="draft.mobileCountry === option.value" type="button" role="option" (mousedown)="$event.preventDefault()" (click)="choose('country', option.value)">{{ option.label }}</button></li>
+                  }
+                </ul>
+              }
+            </div>
+            <input class="h-12 min-w-0 flex-1 rounded-lg border border-[#e6e6e6] bg-white px-4 text-sm outline-none focus:border-[#a9002d]" aria-label="Número de celular" inputmode="numeric" maxlength="15" placeholder="946869590" type="tel" [value]="draft.mobile" (input)="setText('mobile', $event)" />
+          </div>
+        </div>
+        <div class="relative" (focusout)="closeMenu($event, 'marital')">
+          <span class="mb-2 block text-sm text-[#6d6567]" id="profile-marital-label"><span class="text-[#c4002f]">*</span> Estado Civil</span>
+          <button class="flex h-12 w-full items-center justify-between rounded-lg border border-[#e6e6e6] bg-white px-4 text-sm" type="button" aria-labelledby="profile-marital-label" [attr.aria-expanded]="menu() === 'marital'" (click)="toggleMenu('marital')">
+            <span [class.text-[#8a8082]]="!draft.maritalStatus">{{ label(maritalOptions, draft.maritalStatus, 'Seleccionar') }}</span>
+            <svg aria-hidden="true" class="size-4 text-[#6d6567]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg>
+          </button>
+          @if (menu() === 'marital') {
+            <ul class="absolute left-0 right-0 top-[calc(100%+4px)] z-20 overflow-hidden rounded-lg border border-[#eee] bg-white py-1 shadow-[0_8px_24px_rgb(0_0_0_/_12%)]" role="listbox">
+              @for (option of maritalOptions; track option.value) {
+                <li><button class="block w-full px-3 py-2 text-center text-sm hover:bg-[#f4d5dc]" [class.bg-[#f4d5dc]]="draft.maritalStatus === option.value" type="button" role="option" (mousedown)="$event.preventDefault()" (click)="choose('marital', option.value)">{{ option.label }}</button></li>
+              }
+            </ul>
+          }
+        </div>
+      </div>
+      <div class="grid gap-5 md:grid-cols-2">
+        <div>
+          <label class="mb-2 block text-sm text-[#6d6567]" for="profile-personal-email"><span class="text-[#c4002f]">*</span> Email Personal</label>
+          <input class="h-12 w-full rounded-lg border border-[#e6e6e6] bg-white px-4 text-sm outline-none focus:border-[#a9002d]" id="profile-personal-email" autocomplete="email" maxlength="254" placeholder="Ingrese su correo" type="email" [value]="draft.personalEmail" (input)="setText('personalEmail', $event)" />
+        </div>
+        <div>
+          <span class="mb-2 block text-sm text-[#6d6567]"><span class="text-[#c4002f]">*</span> Email Institucional</span>
+          <p class="flex h-12 items-center rounded-lg bg-[#d5d5d5] px-4 text-sm text-[#3f3a3b]">{{ profile()?.email }}</p>
+        </div>
+      </div>
+      <div>
+        <label class="mb-2 block text-sm text-[#6d6567]" for="profile-address"><span class="text-[#c4002f]">*</span> Dirección</label>
+        <input class="h-12 w-full rounded-lg border border-[#e6e6e6] bg-white px-4 text-sm outline-none focus:border-[#a9002d]" id="profile-address" maxlength="240" placeholder="Ingrese su dirección" type="text" [value]="draft.address" (input)="setText('address', $event)" />
+      </div>
+    </div>
+    <div class="mt-8 flex justify-end">
+      <button class="rounded-full bg-[#c98998] px-10 py-3 text-base font-semibold text-white transition hover:bg-[#b87486] disabled:opacity-60" type="submit" [disabled]="saving()">Actualizar</button>
+    </div>
+  </form>
+  }
+} @else if (tab() === 'academic') {
+  @if (profile(); as profile) {
+  <section class="mt-6 rounded-[28px] bg-white px-6 py-8 shadow-[0_8px_24px_rgb(30_30_30_/_8%)] sm:px-10" aria-label="Datos académicos">
+    <div class="grid gap-5 md:grid-cols-2">
+      <div>
+        <span class="mb-2 block text-sm text-[#6d6567]">Sede</span>
+        <p class="flex h-12 items-center rounded-lg bg-[#d5d5d5] px-4 text-sm text-[#3f3a3b]">{{ siteName() }}</p>
+      </div>
+      <div>
+        <span class="mb-2 block text-sm text-[#6d6567]">Tipo de usuario</span>
+        <p class="flex h-12 items-center rounded-lg bg-[#d5d5d5] px-4 text-sm text-[#3f3a3b]">{{ profile.typeName }}</p>
+      </div>
+      <div>
+        <span class="mb-2 block text-sm text-[#6d6567]">Usuario</span>
+        <p class="flex h-12 items-center rounded-lg bg-[#d5d5d5] px-4 text-sm text-[#3f3a3b]">{{ profile.username }}</p>
+      </div>
+      <div>
+        <span class="mb-2 block text-sm text-[#6d6567]">Estado</span>
+        <p class="flex h-12 items-center rounded-lg bg-[#d5d5d5] px-4 text-sm text-[#3f3a3b]">{{ profile.statusName }}</p>
+      </div>
+    </div>
+  </section>
+  }
+} @else if (tab() === 'settings') {
+  <form class="mt-6 rounded-[28px] bg-white px-6 py-8 shadow-[0_8px_24px_rgb(30_30_30_/_8%)] sm:px-10" (submit)="$event.preventDefault(); savePassword()">
+    <div class="grid max-w-3xl gap-5 md:grid-cols-2">
+      <div>
+        <label class="mb-2 block text-sm text-[#6d6567]" for="profile-password"><span class="text-[#c4002f]">*</span> Nueva contraseña</label>
+        <input class="h-12 w-full rounded-lg border border-[#e6e6e6] bg-white px-4 text-sm outline-none focus:border-[#a9002d]" id="profile-password" autocomplete="new-password" maxlength="72" placeholder="Ingrese su contraseña" [type]="passwordVisible() ? 'text' : 'password'" [value]="password()" (input)="password.set($any($event.target).value)" />
+      </div>
+      <div>
+        <label class="mb-2 block text-sm text-[#6d6567]" for="profile-password-confirm"><span class="text-[#c4002f]">*</span> Confirmar contraseña</label>
+        <input class="h-12 w-full rounded-lg border border-[#e6e6e6] bg-white px-4 text-sm outline-none focus:border-[#a9002d]" id="profile-password-confirm" autocomplete="new-password" maxlength="72" placeholder="Confirme su contraseña" [type]="passwordVisible() ? 'text' : 'password'" [value]="confirmation()" (input)="confirmation.set($any($event.target).value)" />
+      </div>
+    </div>
+    <button class="mt-4 text-sm font-semibold text-[#a9002d]" type="button" (click)="passwordVisible.set(!passwordVisible())">{{ passwordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña' }}</button>
+    <div class="mt-8 flex justify-end">
+      <button class="rounded-full bg-[#c98998] px-10 py-3 text-base font-semibold text-white transition hover:bg-[#b87486] disabled:opacity-60" type="submit" [disabled]="saving()">Actualizar</button>
+    </div>
+  </form>
+}

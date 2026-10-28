@@ -127,6 +127,16 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'perfil',
+    title: 'Perfil | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, administratorGuard],
+    data: { section: 'profile' },
+    loadComponent: () =>
+      import('./features/admin/pages/administrator-home/administrator-home.component').then(
+        (module) => module.AdministratorHomeComponent,
+      ),
+  },
+  {
     path: 'inicio',
     title: 'Inicio | Centro de Idiomas UPRIT',
     canMatch: [administratorMatchGuard],

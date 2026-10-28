@@ -12,11 +12,12 @@ import { AdminUserTypesComponent } from '../user-types/admin-user-types.componen
 import { AdminUsersComponent } from '../users/admin-users.component';
 import { AdminSitesComponent } from '../sites/admin-sites.component';
 import { AdminSiteCreateComponent } from '../sites/admin-site-create.component';
+import { AccountProfileComponent } from '../../../account/pages/profile/account-profile.component';
 
 type AdminNavIcon = 'home' | 'modules' | 'sites' | 'settings' | 'permissions' | 'user-types' | 'users' | 'history';
 
 @Component({
-  imports: [NgTemplateOutlet, RouterLink, AdminModulesComponent, AdminHistoryComponent, AdminAcademicConfigComponent, AdminPermissionsComponent, AdminUserTypesComponent, AdminUsersComponent, AdminSitesComponent, AdminSiteCreateComponent],
+  imports: [NgTemplateOutlet, RouterLink, AdminModulesComponent, AdminHistoryComponent, AdminAcademicConfigComponent, AdminPermissionsComponent, AdminUserTypesComponent, AdminUsersComponent, AdminSitesComponent, AdminSiteCreateComponent, AccountProfileComponent],
   templateUrl: './administrator-home.component.html',
 })
 export class AdministratorHomeComponent implements OnInit {
@@ -46,8 +47,8 @@ export class AdministratorHomeComponent implements OnInit {
     { label: 'Usuarios', icon: 'users', route: '/administracion/usuarios', section: 'users' },
     { label: 'Historial', icon: 'history', route: '/administracion/historial', section: 'history' },
   ];
-  private resolveSection(value: unknown): 'home' | 'modules' | 'history' | 'academic-config' | 'roles' | 'permissions' | 'users' | 'sites' | 'site-create' | 'site-edit' {
-    return value === 'modules' || value === 'history' || value === 'academic-config' || value === 'roles' || value === 'permissions' || value === 'users' || value === 'sites' || value === 'site-create' || value === 'site-edit' ? value : 'home';
+  private resolveSection(value: unknown): 'home' | 'modules' | 'history' | 'academic-config' | 'roles' | 'permissions' | 'users' | 'sites' | 'site-create' | 'site-edit' | 'profile' {
+    return value === 'modules' || value === 'history' || value === 'academic-config' || value === 'roles' || value === 'permissions' || value === 'users' || value === 'sites' || value === 'site-create' || value === 'site-edit' || value === 'profile' ? value : 'home';
   }
   protected isCurrent(itemSection: string): boolean {
     return itemSection === this.section || (itemSection === 'sites' && (this.section === 'site-create' || this.section === 'site-edit'));
