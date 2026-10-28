@@ -177,6 +177,14 @@ export const routes: Routes = [
       import('./features/director/pages/director-home/director-home.component').then((module) => module.DirectorHomeComponent),
   },
   {
+    path: 'direccion/faltas-alumnos',
+    title: 'Justificación de alumnos | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, directorGuard],
+    data: { section: 'absences' },
+    loadComponent: () =>
+      import('./features/director/pages/director-home/director-home.component').then((module) => module.DirectorHomeComponent),
+  },
+  {
     path: 'direccion/docentes',
     title: 'Gestión de docentes | Centro de Idiomas UPRIT',
     canActivate: [authenticatedGuard, directorGuard],

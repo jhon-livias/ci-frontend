@@ -101,6 +101,8 @@
     <section class="px-6 py-8 sm:px-10 sm:py-10 lg:ml-72 lg:px-14 lg:py-12">
       @if (section === 'students') {
         <app-student-attendance />
+      } @else if (section === 'absences') {
+        <app-student-absences />
       } @else if (section === 'teacher-follow') {
         <app-teacher-attendance />
       } @else if (section === 'teachers') {

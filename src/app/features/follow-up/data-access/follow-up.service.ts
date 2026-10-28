@@ -43,6 +43,7 @@ export interface StudentAbsenceRow {
   readonly language: string;
   readonly level: string;
   readonly status: AbsenceStatus;
+  readonly attachmentName?: string | null;
 }
 
 export interface AcademicFollowUp {
@@ -70,7 +71,11 @@ const isTeacher = (value: unknown): value is TeacherAttendanceRow =>
 const isAbsence = (value: unknown): value is StudentAbsenceRow =>
   isRecord(value) && TEXT(value['id'], 64) && TEXT(value['occurredOn'], 32) && TEXT(value['documentNumber'], 16) &&
   TEXT(value['studentName'], 200) && TEXT(value['groupCode'], 16) && TEXT(value['language'], 80) && TEXT(value['level'], 80) &&
-  (value['status'] === 'Injustificado' || value['status'] === 'Justificado');
+  (value['status'] === 'Injustificado' || value['status'] === 'Justificado') && (value['attachmentName'] === undefined || value['attachmentName'] === null || TEXT(value['attachmentName'], 160));
+const isAbsenceResponse = (value: unknown): value is Omit<StudentAbsenceRow, 'occurredOn'> & { readonly date: string } =>
+  isRecord(value) && TEXT(value['id'], 64) && TEXT(value['date'], 32) && TEXT(value['documentNumber'], 16) &&
+  TEXT(value['studentName'], 200) && TEXT(value['groupCode'], 16) && TEXT(value['language'], 80) && TEXT(value['level'], 80) &&
+  (value['status'] === 'Injustificado' || value['status'] === 'Justificado') && (value['attachmentName'] === null || TEXT(value['attachmentName'], 160));
 const isOverview = (value: unknown): value is AcademicFollowUp =>
   isRecord(value) && typeof value['absenceLimit'] === 'number' && Number.isInteger(value['absenceLimit']) && value['absenceLimit'] >= 1 && value['absenceLimit'] <= 100 &&
   Array.isArray(value['alerts']) && value['alerts'].every(isAlert) &&
@@ -99,9 +104,15 @@ export class FollowUpService {
   async absences(query = '', date = '', status = ''): Promise<readonly StudentAbsenceRow[]> {
     const response = await firstValueFrom(this.http.get<unknown>(`${this.url}/absences`, { params: { query, date, status } }));
     const rows = isRecord(response) && Array.isArray(response['absences']) ? response['absences'] : [];
-    return rows.flatMap((row) => isAbsence(row) ? [row] : []);
+    return rows.flatMap((row) => isAbsenceResponse(row) ? [{ ...row, occurredOn: row.date }] : []);
   }
   async justify(attendanceId: string, reason: string, file?: { name: string; contentType: string; base64: string }): Promise<void> {
     await firstValueFrom(this.http.post(`${this.url}/absences/justify`, { attendanceId, reason, ...(file ? { file } : {}) }));
+  }
+
+  async attachment(attendanceId: string): Promise<{ name: string; contentType: string; base64: string }> {
+    const response = await firstValueFrom(this.http.get<unknown>(`${this.url}/absences/${attendanceId}/attachment`));
+    if (!isRecord(response) || !TEXT(response['name'], 160) || !TEXT(response['contentType'], 100) || !TEXT(response['base64'], 7000000)) throw new Error('El adjunto recibido no es válido.');
+    return { name: response['name'], contentType: response['contentType'], base64: response['base64'] };
   }
 }

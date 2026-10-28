@@ -1,51 +1,34 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 
 import { FollowUpService, type StudentAbsenceRow } from '../../data-access/follow-up.service';
 import { UiButtonComponent } from '../../../../shared/ui/button/ui-button.component';
-import { UiFieldComponent } from '../../../../shared/ui/field/ui-field.component';
 import { UiSelectComponent, type UiSelectOption } from '../../../../shared/ui/select/ui-select.component';
 
-const allOption = (): UiSelectOption => ({ value: '', label: 'Todos' });
-const uniqueOptions = (rows: readonly StudentAbsenceRow[], key: keyof StudentAbsenceRow): readonly UiSelectOption[] => {
-  const values = [...new Set(rows.map((row) => String(row[key])))].sort((a, b) => a.localeCompare(b, 'es'));
-  return [allOption(), ...values.map((value) => ({ value, label: value }))];
-};
+type Upload = { readonly name: string; readonly contentType: string; readonly base64: string };
+const MAX_FILE_BYTES = 5 * 1024 * 1024;
+const ACCEPTED = new Set(['application/pdf', 'image/jpeg', 'image/png']);
 
 @Component({
   selector: 'app-student-absences',
-  imports: [UiButtonComponent, UiFieldComponent, UiSelectComponent],
+  imports: [UiButtonComponent, UiSelectComponent],
   templateUrl: './student-absences.component.html',
 })
 export class StudentAbsencesComponent implements OnInit {
   private readonly api = inject(FollowUpService);
   protected readonly documentNumber = signal('');
   protected readonly occurredOn = signal('');
-  protected readonly status = signal('Injustificado');
-  protected readonly groupCode = signal('');
-  protected readonly language = signal('');
-  protected readonly level = signal('');
-  protected readonly applied = signal({ documentNumber: '', occurredOn: '', status: 'Injustificado', groupCode: '', language: '', level: '' });
+  protected readonly status = signal('');
   protected readonly rows = signal<readonly StudentAbsenceRow[]>([]);
+  protected readonly selected = signal<StudentAbsenceRow | null>(null);
+  protected readonly reason = signal('');
+  protected readonly file = signal<Upload | null>(null);
+  protected readonly saving = signal(false);
   protected readonly message = signal('');
   protected readonly statusOptions: readonly UiSelectOption[] = [
+    { value: '', label: 'Todos' },
     { value: 'Injustificado', label: 'Injustificado' },
     { value: 'Justificado', label: 'Justificado' },
-    allOption(),
   ];
-  protected readonly groupOptions = computed(() => uniqueOptions(this.rows(), 'groupCode'));
-  protected readonly languageOptions = computed(() => uniqueOptions(this.rows(), 'language'));
-  protected readonly levelOptions = computed(() => uniqueOptions(this.rows(), 'level'));
-  protected readonly visible = computed(() => {
-    const filter = this.applied();
-    return this.rows().filter((row) =>
-      (!filter.documentNumber || row.documentNumber.includes(filter.documentNumber)) &&
-      (!filter.occurredOn || row.occurredOn === filter.occurredOn) &&
-      (!filter.status || row.status === filter.status) &&
-      (!filter.groupCode || row.groupCode === filter.groupCode) &&
-      (!filter.language || row.language === filter.language) &&
-      (!filter.level || row.level === filter.level),
-    );
-  });
 
   ngOnInit(): void {
     void this.load();
@@ -56,29 +39,79 @@ export class StudentAbsencesComponent implements OnInit {
   }
 
   protected consult(): void {
-    this.applied.set({
-      documentNumber: this.documentNumber().trim(),
-      occurredOn: this.occurredOn(),
-      status: this.status(),
-      groupCode: this.groupCode(),
-      language: this.language(),
-      level: this.level(),
-    });
+    void this.load();
   }
 
   protected clear(): void {
     this.documentNumber.set('');
     this.occurredOn.set('');
-    this.status.set('Injustificado');
-    this.groupCode.set('');
-    this.language.set('');
-    this.level.set('');
+    this.status.set('');
     this.consult();
+  }
+
+  protected select(row: StudentAbsenceRow): void {
+    this.selected.set(row);
+    this.reason.set('');
+    this.file.set(null);
+    this.message.set('');
+  }
+
+  protected onReason(event: Event): void {
+    this.reason.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  protected async onFile(event: Event): Promise<void> {
+    const selected = (event.target as HTMLInputElement).files?.item(0);
+    this.file.set(null);
+    if (!selected) return;
+    if (!ACCEPTED.has(selected.type) || selected.size > MAX_FILE_BYTES) {
+      this.message.set('El adjunto debe ser PDF, JPG o PNG y no superar 5 MB.');
+      return;
+    }
+    const data = await selected.arrayBuffer();
+    const bytes = new Uint8Array(data);
+    let binary = '';
+    for (const byte of bytes) binary += String.fromCharCode(byte);
+    this.file.set({ name: selected.name, contentType: selected.type, base64: btoa(binary) });
+  }
+
+  protected async justify(): Promise<void> {
+    const row = this.selected();
+    if (!row || row.status !== 'Injustificado' || !this.reason().trim()) {
+      this.message.set('Selecciona una falta injustificada e indica el motivo.');
+      return;
+    }
+    this.saving.set(true);
+    this.message.set('');
+    try {
+      await this.api.justify(row.id, this.reason().trim(), this.file() ?? undefined);
+      this.message.set('La falta fue justificada.');
+      this.selected.set(null);
+      this.reason.set('');
+      this.file.set(null);
+      await this.load();
+    } catch {
+      this.message.set('No se pudo registrar la justificación.');
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  protected async download(row: StudentAbsenceRow): Promise<void> {
+    try {
+      const file = await this.api.attachment(row.id);
+      const binary = atob(file.base64);
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      const url = URL.createObjectURL(new Blob([bytes], { type: file.contentType }));
+      const link = document.createElement('a'); link.href = url; link.download = file.name; link.click(); URL.revokeObjectURL(url);
+    } catch {
+      this.message.set('No se pudo descargar el adjunto.');
+    }
   }
 
   private async load(): Promise<void> {
     try {
-      this.rows.set((await this.api.read()).absences);
+      this.rows.set(await this.api.absences(this.documentNumber().trim(), this.occurredOn(), this.status()));
     } catch {
       this.message.set('No se pudieron cargar las faltas.');
     }

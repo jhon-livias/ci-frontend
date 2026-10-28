@@ -6,6 +6,7 @@ import { AuthSessionService } from '../../../../core/auth/auth-session.service';
 import { AccountProfileComponent } from '../../../account/pages/profile/account-profile.component';
 import { NotificationInboxService } from '../../../admin/data-access/notifications.service';
 import { StudentAttendanceComponent } from '../../../follow-up/pages/student-attendance/student-attendance.component';
+import { StudentAbsencesComponent } from '../../../follow-up/pages/student-absences/student-absences.component';
 import { TeacherAttendanceComponent } from '../../../follow-up/pages/teacher-attendance/teacher-attendance.component';
 import { DirectorGroupsComponent } from '../groups/director-groups.component';
 import { DirectorHomeDashboardComponent } from '../home/director-home-dashboard.component';
@@ -13,12 +14,12 @@ import { DirectorScheduleCombosComponent } from '../schedule-combos/director-sch
 import { DirectorTeacherJustificationsComponent } from '../teacher-justifications/director-teacher-justifications.component';
 import { DirectorTeachersComponent } from '../teachers/director-teachers.component';
 
-type DirectorNavIcon = 'home' | 'students' | 'teachers' | 'follow' | 'justify' | 'groups' | 'schedule';
-type DirectorSection = 'home' | 'students' | 'teacher-follow' | 'teachers' | 'justifications' | 'groups' | 'schedules' | 'profile';
+type DirectorNavIcon = 'home' | 'students' | 'teachers' | 'follow' | 'justify' | 'groups' | 'schedule' | 'absences';
+type DirectorSection = 'home' | 'students' | 'teacher-follow' | 'teachers' | 'justifications' | 'groups' | 'schedules' | 'absences' | 'profile';
 
 @Component({
   imports: [
-    NgTemplateOutlet, RouterLink, AccountProfileComponent, StudentAttendanceComponent, TeacherAttendanceComponent,
+    NgTemplateOutlet, RouterLink, AccountProfileComponent, StudentAttendanceComponent, StudentAbsencesComponent, TeacherAttendanceComponent,
     DirectorHomeDashboardComponent, DirectorTeachersComponent, DirectorTeacherJustificationsComponent,
     DirectorGroupsComponent, DirectorScheduleCombosComponent,
   ],
@@ -37,6 +38,7 @@ export class DirectorHomeComponent implements OnInit {
   protected readonly navigation: readonly { label: string; icon: DirectorNavIcon; route: string; section: DirectorSection }[] = [
     { label: 'Inicio', icon: 'home', route: '/inicio', section: 'home' },
     { label: 'Alumnos', icon: 'students', route: '/direccion/alumnos', section: 'students' },
+    { label: 'Justificación de alumnos', icon: 'absences', route: '/direccion/faltas-alumnos', section: 'absences' },
     { label: 'Gestión de docentes', icon: 'teachers', route: '/direccion/docentes', section: 'teachers' },
     { label: 'Seguimiento de docentes', icon: 'follow', route: '/direccion/seguimiento-docentes', section: 'teacher-follow' },
     { label: 'Justificación de docentes', icon: 'justify', route: '/direccion/justificacion-docentes', section: 'justifications' },
@@ -50,7 +52,7 @@ export class DirectorHomeComponent implements OnInit {
   }
 
   private resolveSection(value: unknown): DirectorSection {
-    return value === 'students' || value === 'teacher-follow' || value === 'teachers' || value === 'justifications' || value === 'groups' || value === 'schedules' || value === 'profile' ? value : 'home';
+    return value === 'students' || value === 'teacher-follow' || value === 'teachers' || value === 'justifications' || value === 'groups' || value === 'schedules' || value === 'absences' || value === 'profile' ? value : 'home';
   }
 
   protected isCurrent(itemSection: string): boolean {
