@@ -1,0 +1,100 @@
+<h1 class="font-[var(--font-heading)] text-[1.65rem] font-bold tracking-wide text-[#a9002d]">TARIFAS Y PAGOS</h1>
+<p class="mt-2 text-sm text-[#7c8691]">Montos de matrícula e incidencias de la pasarela.</p>
+@if (message()) {
+  <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
+}
+
+<section class="mt-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)] sm:p-8" aria-label="Tarifas">
+  <h2 class="text-lg font-bold text-[#1e1e1e]">Tarifas</h2>
+  <p class="mt-1 text-sm text-[#7c8691]">Montos que ve el estudiante al pagar</p>
+  <div class="mt-5 overflow-x-auto">
+    <table class="w-full min-w-[32rem] border-collapse text-left text-sm text-[#1e1e1e]">
+      <thead>
+        <tr class="border-b border-[#ece6e7] font-bold">
+          <th class="h-12 px-3" scope="col">Concepto</th>
+          <th class="h-12 px-3" scope="col">Monto</th>
+          <th class="h-12 px-3 text-center" scope="col">Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of tariffs(); track row.id) {
+          <tr class="border-b border-[#ece6e7]">
+            <td class="h-14 px-3">{{ row.name }}</td>
+            <td class="h-14 px-3 font-semibold">
+              @if (editingId() === row.id) {
+                <label>
+                  <span class="sr-only">Nuevo monto</span>
+                  <input
+                    id="tariff-amount"
+                    class="h-11 w-32 rounded-md border border-[#d5d0d1] px-3 text-sm outline-none focus-visible:border-[#a9002d]"
+                    type="text"
+                    inputmode="decimal"
+                    [value]="draft()"
+                    (input)="onDraft($event)"
+                  />
+                </label>
+              } @else {
+                S/ {{ row.amount }}
+              }
+            </td>
+            <td class="h-14 px-3 text-center">
+              @if (editingId() === row.id) {
+                <div class="flex justify-center gap-3">
+                  <ui-button type="button" variant="soft" (click)="cancelEdit()">Cancelar</ui-button>
+                  <ui-button type="button" (click)="askSave(row)">Guardar</ui-button>
+                </div>
+              } @else {
+                <button class="font-semibold text-[#a9002d] hover:underline" type="button" (click)="startEdit(row)">Modificar</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="mt-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)] sm:p-8" aria-label="Incidencias de pasarela">
+  <h2 class="text-lg font-bold text-[#1e1e1e]">Incidencias de pasarela</h2>
+  <p class="mt-1 text-sm text-[#7c8691]">Pagos con error que requieren revisión</p>
+  <div class="mt-5 overflow-x-auto">
+    <table class="w-full min-w-[48rem] border-collapse text-left text-sm text-[#1e1e1e]">
+      <thead>
+        <tr class="border-b border-[#ece6e7] font-bold">
+          <th class="h-12 px-3" scope="col">Fecha</th>
+          <th class="h-12 px-3" scope="col">Alumno</th>
+          <th class="h-12 px-3" scope="col">Concepto</th>
+          <th class="h-12 px-3" scope="col">Error</th>
+          <th class="h-12 px-3" scope="col">Estado</th>
+          <th class="h-12 px-3 text-center" scope="col">Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of incidents(); track row.id) {
+          <tr class="border-b border-[#ece6e7]">
+            <td class="h-14 px-3 whitespace-nowrap">{{ formatWhen(row.occurredAt) }}</td>
+            <td class="h-14 px-3 font-medium">{{ row.studentName }}</td>
+            <td class="h-14 px-3">{{ row.concept }}</td>
+            <td class="h-14 px-3 text-[#b45309]">{{ row.error }}</td>
+            <td class="h-14 px-3">{{ row.status }}</td>
+            <td class="h-14 px-3 text-center">
+              @if (row.status === 'Pendiente') {
+                <button class="font-semibold text-[#1f8a4c] hover:underline" type="button" (click)="askResolve(row)">Marcar resuelta</button>
+              } @else {
+                —
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td class="h-14 px-3 text-[#7c8691]" colspan="6">Aún no hay incidencias de pago.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+
+@if (confirmation(); as current) {
+  <ui-confirm [message]="current.message" [details]="current.details" (confirmed)="acceptConfirmation()" (cancelled)="cancelConfirmation()" />
+}

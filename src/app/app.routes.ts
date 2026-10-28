@@ -90,6 +90,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/admin/pages/administrator-home/administrator-home.component').then((module) => module.AdministratorHomeComponent),
   },
   {
+    path: 'administracion/tarifas',
+    title: 'Tarifas y pagos | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, administratorGuard],
+    data: { section: 'payments' },
+    loadComponent: () =>
+      import('./features/admin/pages/administrator-home/administrator-home.component').then(
+        (module) => module.AdministratorHomeComponent,
+      ),
+  },
+  {
     path: 'administracion/configuracion',
     title: 'Configuración académica | Centro de Idiomas UPRIT',
     canActivate: [authenticatedGuard, administratorGuard],

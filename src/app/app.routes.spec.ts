@@ -7,7 +7,10 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { AuthSessionService } from './core/auth/auth-session.service';
 import { AdministratorHomeComponent } from './features/admin/pages/administrator-home/administrator-home.component';
 import { HomePageComponent } from './features/home/pages/home-page.component';
+import { AuditLogService } from './features/admin/data-access/audit-log.service';
 import { ModuleCatalogService } from './features/admin/data-access/module-catalog.service';
+import { PaymentsAdminService } from './features/admin/data-access/payments-admin.service';
+import { UserDirectoryService } from './features/admin/data-access/user-directory.service';
 import { routes } from './app.routes';
 
 describe('application routes', () => {
@@ -29,6 +32,9 @@ describe('application routes', () => {
         provideHttpClient(),
         provideRouter(routes),
         { provide: AuthSessionService, useValue: session },
+        { provide: UserDirectoryService, useValue: { list: async () => ({ total: 0 }) } },
+        { provide: AuditLogService, useValue: { list: async () => ({ events: [] }) } },
+        { provide: PaymentsAdminService, useValue: { read: async () => ({ tariffs: [], incidents: [], pendingIncidents: 0 }) } },
         {
           provide: ModuleCatalogService,
           useValue: {

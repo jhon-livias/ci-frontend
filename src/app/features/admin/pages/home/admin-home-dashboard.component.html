@@ -1,0 +1,61 @@
+@if (message()) {
+  <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
+}
+<div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+  <article class="rounded-2xl border-l-4 border-[#a9002d] bg-white p-5 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+    <p class="text-sm text-[#7c8691]">Usuarios activos</p>
+    <p class="mt-1 text-3xl font-bold text-[#1e1e1e]">{{ activeUsers() }}</p>
+  </article>
+  <article class="rounded-2xl border-l-4 border-[#1f8a4c] bg-white p-5 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+    <p class="text-sm text-[#7c8691]">Grupos aperturados</p>
+    <p class="mt-1 text-3xl font-bold text-[#1e1e1e]">0</p>
+  </article>
+  <article class="rounded-2xl border-l-4 border-[#7b3ff2] bg-white p-5 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+    <p class="text-sm text-[#7c8691]">Matrículas del mes</p>
+    <p class="mt-1 text-3xl font-bold text-[#1e1e1e]">0</p>
+  </article>
+  <article class="rounded-2xl border-l-4 border-[#c89600] bg-white p-5 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+    <p class="text-sm text-[#7c8691]">Incidencias de pago</p>
+    <p class="mt-1 text-3xl font-bold text-[#1e1e1e]">{{ pendingIncidents() }}</p>
+  </article>
+</div>
+<div class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+  <section class="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]" aria-label="Usuarios por rol">
+    <h2 class="text-lg font-bold text-[#1e1e1e]">Usuarios por rol</h2>
+    <p class="mb-5 text-sm text-[#7c8691]">Cuentas activas en el sistema</p>
+    <ul class="space-y-4">
+      @for (bar of bars(); track bar.label) {
+        <li>
+          <div class="mb-1 flex justify-between text-sm text-[#1e1e1e]">
+            <span>{{ bar.label }}</span>
+            <span class="font-semibold">{{ bar.count }}</span>
+          </div>
+          <div class="h-3 rounded-full bg-[#ece6e7]">
+            <div class="h-3 rounded-full" [style.width.%]="bar.width" [style.background]="bar.color"></div>
+          </div>
+        </li>
+      }
+    </ul>
+  </section>
+  <section class="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]" aria-label="Actividad reciente">
+    <div class="mb-4 flex items-start justify-between gap-3">
+      <div>
+        <h2 class="text-lg font-bold text-[#1e1e1e]">Actividad reciente</h2>
+        <p class="text-sm text-[#7c8691]">Últimos eventos de la bitácora</p>
+      </div>
+      <a class="text-sm font-semibold text-[#a9002d] hover:underline" routerLink="/administracion/historial">Ver historial</a>
+    </div>
+    @if (activity().length === 0) {
+      <p class="text-sm text-[#7c8691]">Aún no hay movimientos.</p>
+    } @else {
+      <ul class="space-y-3 text-sm">
+        @for (event of activity(); track event.id) {
+          <li>
+            <p class="font-medium text-[#1e1e1e]">{{ event.action }}</p>
+            <p class="text-xs text-[#7c8691]">{{ formatWhen(event.occurredAt) }} · {{ event.actorName }}</p>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</div>
