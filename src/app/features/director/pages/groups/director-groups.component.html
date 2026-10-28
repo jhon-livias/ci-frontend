@@ -28,6 +28,9 @@
               @if (group.status === 'CREATED' || group.status === 'RESCHEDULED') {
                 <button class="mr-3 font-semibold text-[#a9002d] hover:underline" type="button" (click)="startEdit(group)">Actualizar</button>
                 <button class="font-semibold text-[#a9002d] hover:underline" type="button" (click)="startReschedule(group)">Reprogramar</button>
+                <button class="ml-3 font-semibold text-[#1f8a4c] hover:underline" type="button" (click)="changeStatus(group, 'OPENED')">Aperturar</button>
+              } @else if (group.status === 'OPENED') {
+                <button class="font-semibold text-[#a9002d] hover:underline" type="button" (click)="changeStatus(group, 'COMPLETED')">Culminar</button>
               }
             </td>
           </tr>

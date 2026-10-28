@@ -34,6 +34,10 @@ export interface TeacherSession {
   readonly checkOutAt: string | null;
 }
 
+export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'JUSTIFIED_ABSENCE' | 'LATE';
+export interface TeachingStudent { readonly userId: string; readonly code: string; readonly documentNumber: string; readonly name: string; readonly status: AttendanceStatus | null; }
+export interface StudentGrade { readonly userId: string; readonly code: string; readonly documentNumber: string; readonly name: string; readonly listeningReading: number | null; readonly writing: number | null; readonly testOne: number | null; readonly participation: number | null; readonly finalTest: number | null; readonly total: number | null; }
+
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 const TEXT = (value: unknown, max: number): value is string => typeof value === 'string' && value.length > 0 && value.length <= max && !value.includes('<');
 
@@ -103,5 +107,42 @@ export class TeacherWorkspaceService {
 
   async checkOut(groupId: string): Promise<void> {
     await firstValueFrom(this.http.post(`${this.url}/groups/${groupId}/check-out`, {}));
+  }
+
+  async roster(groupId: string): Promise<{ date: string; students: readonly TeachingStudent[] }> {
+    const response = await firstValueFrom(this.http.post<unknown>(`${this.url}/groups/${groupId}/roster`, {}));
+    return { date: isRecord(response) && typeof response['date'] === 'string' ? response['date'] : '', students: this.students(response, true) };
+  }
+
+  async saveAttendance(groupId: string, rows: readonly { studentUserId: string; status: AttendanceStatus }[]): Promise<void> {
+    await firstValueFrom(this.http.post(`${this.url}/groups/${groupId}/attendance`, { rows }));
+  }
+
+  async attendanceHistory(groupId: string): Promise<readonly { date: string; documentNumber: string; studentName: string; status: AttendanceStatus }[]> {
+    const response = await firstValueFrom(this.http.post<unknown>(`${this.url}/groups/${groupId}/attendance/history`, {}));
+    const rows = isRecord(response) && Array.isArray(response['rows']) ? response['rows'] : [];
+    return rows.flatMap((row) => isRecord(row) && TEXT(row['date'], 16) && TEXT(row['documentNumber'], 16) && TEXT(row['studentName'], 200) && (row['status'] === 'PRESENT' || row['status'] === 'ABSENT' || row['status'] === 'JUSTIFIED_ABSENCE' || row['status'] === 'LATE') ? [{ date: row['date'], documentNumber: row['documentNumber'], studentName: row['studentName'], status: row['status'] }] : []);
+  }
+
+  async grades(groupId: string): Promise<readonly StudentGrade[]> {
+    const response = await firstValueFrom(this.http.post<unknown>(`${this.url}/groups/${groupId}/grades/view`, {}));
+    return this.students(response, false).flatMap((student) => {
+      if (!isRecord(student)) return [];
+      const number = (key: string) => typeof student[key] === 'number' ? student[key] : null;
+      return [{ ...student, listeningReading: number('listeningReading'), writing: number('writing'), testOne: number('testOne'), participation: number('participation'), finalTest: number('finalTest'), total: number('total') }];
+    });
+  }
+
+  async saveGrades(groupId: string, rows: readonly Omit<StudentGrade, 'code' | 'documentNumber' | 'name' | 'total'>[]): Promise<void> {
+    await firstValueFrom(this.http.post(`${this.url}/groups/${groupId}/grades`, { rows }));
+  }
+
+  private students(response: unknown, includeStatus: boolean): readonly TeachingStudent[] {
+    const rows = isRecord(response) && Array.isArray(response['students']) ? response['students'] : [];
+    return rows.flatMap((row) => {
+      if (!isRecord(row) || !TEXT(row['userId'], 64) || !TEXT(row['code'], 32) || !TEXT(row['documentNumber'], 16) || !TEXT(row['name'], 200)) return [];
+      const status = row['status'];
+      return [{ userId: row['userId'], code: row['code'], documentNumber: row['documentNumber'], name: row['name'], status: includeStatus && (status === 'PRESENT' || status === 'ABSENT' || status === 'JUSTIFIED_ABSENCE' || status === 'LATE') ? status : null }];
+    });
   }
 }

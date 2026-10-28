@@ -94,4 +94,8 @@ export class DirectorOperationsService {
   async reschedule(id: string, startsAt: string, endsAt: string): Promise<void> {
     await firstValueFrom(this.http.patch(`${this.url}/groups/${id}/reschedule`, { startsAt, endsAt }));
   }
+
+  async changeStatus(id: string, status: 'OPENED' | 'COMPLETED', enrolledCount: number): Promise<void> {
+    await firstValueFrom(this.http.patch(`${this.url}/groups/${id}/status`, { status, enrolledCount }));
+  }
 }

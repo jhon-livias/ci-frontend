@@ -26,15 +26,13 @@
           <th class="border p-2">Nota (100)</th>
         </tr>
       </thead>
-      <tbody>
-        <tr><td class="border px-4 py-6 text-left text-[#7c8691]" colspan="7">Aún no hay alumnos en este grupo. Las filas de notas aparecerán con las matrículas.</td></tr>
-      </tbody>
+      <tbody>@for (student of students(); track student.userId) { <tr><td class="border p-2 text-left">{{ student.name }}</td>@for (key of ['listeningReading','writing','testOne','participation','finalTest']; track key) { <td class="border p-2"><input class="w-16 rounded border px-2 py-1 text-center" type="number" min="0" max="20" step="0.01" [disabled]="!editing()" [value]="$any(student)[key] ?? ''" (input)="setGrade(student.userId, $any(key), $event)"></td> }<td class="border p-2 font-semibold">{{ student.total ?? '—' }}</td></tr> } @empty { <tr><td class="border px-4 py-6 text-left text-[#7c8691]" colspan="7">Aún no hay alumnos en este grupo.</td></tr> }</tbody>
     </table>
   </section>
   <div class="mt-4 flex flex-wrap justify-end gap-3">
-    <ui-button type="button" [disabled]="true">Editar notas</ui-button>
-    <ui-button type="button" variant="soft" [disabled]="true">Generar acta</ui-button>
-    <ui-button type="button" [disabled]="true">Guardar</ui-button>
+    <ui-button type="button" variant="soft" [disabled]="!students().length" (click)="downloadRecord()">Descargar acta CSV</ui-button>
+    <ui-button type="button" [disabled]="!students().length || saving()" (click)="editing.set(true)">Editar notas</ui-button>
+    <ui-button type="button" [disabled]="!editing() || saving()" (click)="save()">{{ saving() ? 'Guardando…' : 'Guardar' }}</ui-button>
   </div>
 } @else {
   <p class="text-[#7c8691]">No se encontró ese grupo.</p>

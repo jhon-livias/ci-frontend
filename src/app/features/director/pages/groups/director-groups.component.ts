@@ -146,6 +146,11 @@ export class DirectorGroupsComponent implements OnInit {
     }
   }
 
+  protected async changeStatus(group: AcademicGroup, status: 'OPENED' | 'COMPLETED'): Promise<void> {
+    try { await this.api.changeStatus(group.id, status, group.enrolledCount); await this.load(); }
+    catch { this.message.set(status === 'OPENED' ? 'No se pudo aperturar: se requieren 30 matrículas activas.' : 'No se pudo culminar el grupo.'); }
+  }
+
   private options(kind: string): readonly UiSelectOption[] {
     const catalog = this.catalogs().find((item) => item.kind === kind);
     return (catalog?.items ?? []).map((item) => ({ value: item.name, label: item.name }));
