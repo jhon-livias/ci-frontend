@@ -1,0 +1,96 @@
+<div class="mx-auto max-w-5xl rounded border-t-4 border-[#a9002d] bg-white p-8 shadow-sm">
+  <h2 class="mb-4 border-b pb-2 text-2xl text-gray-800">Nueva matrícula</h2>
+  <div class="mb-6 rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-900">
+    <strong>Importante:</strong> los grupos se abren con mínimo <strong>{{ minStudents() }} estudiantes</strong> y un máximo definido por el centro. Si no se completa el mínimo, se reprograma la fecha de inicio.
+  </div>
+  <label class="mb-2 block text-sm font-bold text-gray-700" for="idioma-matricula">1. Selecciona el idioma en el que deseas matricularte</label>
+  <select id="idioma-matricula" class="mb-6 w-full rounded-lg border border-gray-300 p-3" [value]="language()" (change)="onSelectLanguage($event)">
+    <option value="">-- Selecciona un idioma --</option>
+    @for (item of languages(); track item) {
+      <option [value]="item">{{ item }}</option>
+    }
+  </select>
+  @if (language()) {
+    <h3 class="mb-3 text-lg font-bold text-gray-800">Última matrícula registrada en {{ language() }}</h3>
+    <div class="mb-6 overflow-x-auto rounded-lg border">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-gray-100 text-gray-700"><tr><th class="p-3">Fecha</th><th class="p-3">Grupo</th><th class="p-3">Nivel</th><th class="p-3">Horario</th><th class="p-3">Estado</th></tr></thead>
+        <tbody>
+          @if (last(); as row) {
+            <tr class="border-t"><td class="p-3">{{ row.enrolledAt | date:'dd/MM/yyyy' }}</td><td class="p-3 font-semibold">{{ row.groupCode }}</td><td class="p-3">{{ row.level }}</td><td class="p-3">{{ row.schedule }}</td><td class="p-3">{{ row.statusLabel }}</td></tr>
+          } @else {
+            <tr class="border-t"><td class="p-4 text-center text-gray-500" colspan="5">No hay matrículas anteriores en este idioma. Se mostrarán los grupos del nivel inicial.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (blocked()) {
+      <p class="text-sm text-[#a9002d]">Ya tienes una matrícula en curso para este idioma.</p>
+    } @else if (!nextLevel()) {
+      <p class="text-sm text-[#7c8691]">Ya completaste los niveles disponibles de este idioma.</p>
+    } @else {
+      <h3 class="mb-2 text-lg font-bold">Grupos disponibles para el siguiente nivel: {{ nextLevel() }}</h3>
+      <div class="overflow-x-auto rounded-lg border">
+        <table class="w-full min-w-[1100px] text-left text-sm">
+          <thead class="bg-gray-100 text-gray-700"><tr>
+            <th class="p-3">Elegir / Solicitar</th><th class="p-3">Grupo</th><th class="p-3">Nivel</th><th class="p-3">Horario</th><th class="p-3">Docente</th><th class="p-3">Modalidad</th><th class="p-3">Tipo de estudio</th><th class="p-3">Estado</th><th class="p-3">Disponibilidad</th><th class="p-3">Matrícula</th>
+          </tr></thead>
+          <tbody>
+            @if (groups().length === 0) {
+              <tr><td class="p-4 text-center text-gray-500" colspan="10">No hay grupos creados para ese nivel.</td></tr>
+            }
+            @for (group of groups(); track group.id) {
+              <tr class="border-t">
+                <td class="p-3">
+                  @if (group.availability === 'Lleno') {
+                    <ui-button type="button" variant="soft" (click)="wait(group)">Solicitar otro grupo en el mismo horario</ui-button>
+                  } @else {
+                    <label class="inline-flex items-center gap-2"><input type="radio" name="grupo" class="accent-[#a9002d]" [value]="group.id" [checked]="selected() === group.id" (change)="selected.set(group.id)" /><span>Seleccionar</span></label>
+                  }
+                </td>
+                <td class="p-3 font-semibold">{{ group.code }}</td>
+                <td class="p-3">{{ group.level }}</td>
+                <td class="p-3">{{ group.schedule }}</td>
+                <td class="p-3">{{ group.teacherName }}</td>
+                <td class="p-3">{{ group.modality }}</td>
+                <td class="p-3">{{ group.studyType }}</td>
+                <td class="p-3">{{ group.statusLabel }}</td>
+                <td class="p-3">{{ group.availability }}</td>
+                <td class="p-3">{{ group.amount ? 'S/ ' + group.amount : '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <label class="mt-6 flex items-start gap-3 text-sm text-gray-700">
+        <input class="mt-1 accent-[#a9002d]" type="checkbox" [checked]="terms()" (change)="onTerms($event)" />
+        <span>Acepto los <button class="font-semibold text-[#a9002d] hover:underline" type="button" (click)="termsOpen.set(true)">Términos y condiciones</button> del proceso de matrícula.</span>
+      </label>
+      <div class="mt-6 flex justify-end">
+        <ui-button type="button" [disabled]="!terms() || !selected() || loading()" (click)="enroll()">Pagar matrícula</ui-button>
+      </div>
+    }
+  }
+  @if (message()) {
+    <p class="mt-4 text-sm" [class.text-[#a9002d]]="tone() === 'error'" [class.text-green-700]="tone() === 'ok'" role="status">{{ message() }}</p>
+  }
+</div>
+@if (termsOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div class="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white">
+      <div class="flex items-center justify-between border-b p-5">
+        <h3 class="text-lg font-bold">Términos y condiciones de matrícula</h3>
+        <button type="button" (click)="termsOpen.set(false)" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="space-y-3 p-6 text-sm text-gray-600">
+        <p>La matrícula queda sujeta a la disponibilidad y apertura del grupo seleccionado.</p>
+        <p>Los grupos se abren con el mínimo y el máximo de estudiantes definidos por el centro.</p>
+        <p>Si no se alcanza el mínimo, la fecha de inicio podrá reprogramarse.</p>
+        <p>El cobro se confirma cuando la pasarela de pago lo autorice. Hasta entonces la matrícula queda pendiente de pago.</p>
+      </div>
+      <div class="flex justify-end border-t p-4">
+        <ui-button type="button" (click)="termsOpen.set(false)">Cerrar</ui-button>
+      </div>
+    </div>
+  </div>
+}

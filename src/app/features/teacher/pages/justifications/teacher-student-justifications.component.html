@@ -1,0 +1,30 @@
+<h1 class="font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d] sm:text-3xl">Justificación de alumnos</h1>
+<p class="mt-2 text-sm text-[#7c8691]">Las faltas aparecen como Injustificado. Al justificar se pide una descripción obligatoria; el documento es opcional.</p>
+<section class="mt-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <ui-field id="ja-dni" label="DNI" [(value)]="query" />
+    <label class="block">
+      <span class="mb-1.5 block text-sm font-medium">Fecha</span>
+      <input class="h-11 w-full rounded-lg border border-[#ece6e7] px-3" type="date" [value]="date()" (input)="setDate($event)" />
+    </label>
+    <label class="block">
+      <span class="mb-1.5 block text-sm font-medium">Estado</span>
+      <select class="h-11 w-full rounded-lg border border-[#ece6e7] px-3" [value]="status()" (change)="setStatus($event)">
+        <option value="Injustificado">Injustificado</option>
+        <option value="Justificado">Justificado</option>
+      </select>
+    </label>
+  </div>
+  <div class="mt-4 flex gap-3">
+    <ui-button type="button">Filtrar</ui-button>
+    <ui-button type="button" variant="soft" (click)="clear()">Limpiar</ui-button>
+  </div>
+</section>
+<section class="mt-6 overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+  <table class="w-full min-w-[48rem] text-left text-sm">
+    <thead class="bg-[#faf6f7]"><tr><th class="px-5 py-4">Fecha</th><th class="px-5 py-4">DNI</th><th class="px-5 py-4">Alumno</th><th class="px-5 py-4">Grupo</th><th class="px-5 py-4">Idioma</th><th class="px-5 py-4">Nivel</th><th class="px-5 py-4">Estado</th><th class="px-5 py-4">Acción</th></tr></thead>
+    <tbody>
+      <tr><td class="px-5 py-6 text-[#7c8691]" colspan="8">Aún no hay faltas de alumnos. Aparecerán cuando registres una falta (F) en un grupo aperturado.</td></tr>
+    </tbody>
+  </table>
+</section>

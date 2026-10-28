@@ -1,0 +1,47 @@
+@if (message()) {
+  <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
+}
+<section class="mt-6 rounded-2xl border border-[#cfe3f5] bg-[#eff6ff] p-6">
+  <h2 class="text-lg font-semibold text-[#1e1e1e]">Manual para docentes</h2>
+  <p class="mt-2 text-sm text-[#5e5254]">Consulta cómo marcar asistencia, registrar la lista de alumnos y cargar las calificaciones.</p>
+  <div class="mt-4 flex flex-wrap gap-3">
+    <button class="rounded-lg bg-[#1d4ed8] px-4 py-2 text-sm font-semibold text-white" type="button" (click)="openManual('document')">Ver manual en documento</button>
+    <button class="rounded-lg bg-[#5e5254] px-4 py-2 text-sm font-semibold text-white" type="button" (click)="openManual('video')">Ver manual en video</button>
+  </div>
+</section>
+<section class="mt-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+  <h2 class="font-semibold">Próximas clases</h2>
+  @for (group of nextClasses(); track group.id) {
+    <article class="mt-4 border-t border-[#ece6e7] pt-4">
+      <p class="text-lg font-bold">{{ group.language }} · {{ group.level || 'Suficiencia' }}</p>
+      <p class="text-sm text-[#7c8691]">{{ group.code }} · {{ group.schedule }}</p>
+      @if (group.meetUrl) {
+        <a class="mt-2 inline-block font-semibold text-[#a9002d] underline" [href]="group.meetUrl" rel="noopener" target="_blank">Link a clase</a>
+      } @else {
+        <p class="mt-2 text-sm text-[#7c8691]">Este grupo no tiene un enlace de clase.</p>
+      }
+    </article>
+  } @empty {
+    <p class="mt-3 text-sm text-[#7c8691]">No hay una clase programada para hoy. Aparecerá cuando el director asigne y aperture un grupo con combo horario.</p>
+  }
+</section>
+@if (manual(); as kind) {
+  <div class="fixed inset-0 z-40 grid place-items-center bg-black/40 p-4">
+    <div class="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6">
+      <h2 class="text-xl font-semibold">{{ kind === 'document' ? 'Manual para docentes' : 'Video tutorial' }}</h2>
+      @if (kind === 'document') {
+        <div class="mt-4 space-y-3 text-sm text-[#1e1e1e]">
+          <p><b>1. Inicio:</b> consulta las próximas clases y este material de orientación.</p>
+          <p><b>2. Asistencia del docente:</b> abre un grupo aperturado, registra la entrada y la salida, y descarga el reporte de las fechas marcadas.</p>
+          <p><b>3. Asistencia del alumno:</b> marca A, F, FJ o T en la clase del día y guarda el acta. Las faltas aparecen en Justificación de alumnos.</p>
+          <p><b>4. Notas:</b> edita las cinco calificaciones. El total se calcula sobre 100. Al culminar el grupo hay dos semanas para cerrar notas.</p>
+        </div>
+      } @else {
+        <p class="mt-4 text-sm text-[#7c8691]">El Centro de Idiomas aún no ha publicado el video de capacitación. Este espacio queda reservado para ese material.</p>
+      }
+      <div class="mt-6 text-right">
+        <button class="rounded-lg bg-[#a9002d] px-4 py-2 text-sm font-semibold text-white" type="button" (click)="closeManual()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}

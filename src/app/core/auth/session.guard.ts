@@ -38,3 +38,9 @@ export const advisorMatchGuard: CanMatchFn = () => inject(AuthSessionService).ha
 
 /** Lets the director portal match only for academic operations. */
 export const directorMatchGuard: CanMatchFn = () => inject(AuthSessionService).hasRole('DIRECTOR');
+
+/** Lets the teacher portal match only for assigned groups. */
+export const teacherMatchGuard: CanMatchFn = () => inject(AuthSessionService).hasRole('TEACHER');
+
+/** Lets the student portal match only for own enrollment. */
+export const studentMatchGuard: CanMatchFn = () => inject(AuthSessionService).hasRole('STUDENT');

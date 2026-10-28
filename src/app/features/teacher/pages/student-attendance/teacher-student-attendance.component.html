@@ -1,0 +1,25 @@
+@if (group(); as current) {
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d]">Asistencia diaria de alumnos — Grupo {{ current.code }}</h1>
+    <a class="text-sm font-semibold text-[#a9002d] underline" routerLink="/docencia/asistencia-alumnos">Volver</a>
+  </div>
+  @if (message()) {
+    <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
+  }
+  <section class="mt-6 rounded-2xl bg-white p-5 text-sm shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+    <p><b>Grupo:</b> {{ current.code }} · <b>Idioma:</b> {{ current.language }} · <b>Nivel:</b> {{ current.level }}</p>
+    <p class="mt-1"><b>Horario:</b> {{ current.schedule }} · <b>Inicio:</b> {{ current.startsAt | date:'dd/MM/yyyy':'UTC' }}</p>
+  </section>
+  <p class="mt-4 text-xs text-[#7c8691]">A = Asistencia · F = Falta · FJ = Falta justificada · T = Tardanza. Al culminar el grupo ya no se entra a marcar lista. Quedan dos semanas para cerrar notas.</p>
+  <section class="mt-6 overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-[#faf6f7]"><tr><th class="px-5 py-4">DNI o código</th><th class="px-5 py-4">Nombre del alumno</th><th class="px-5 py-4">Estado del día</th></tr></thead>
+      <tbody>
+        <tr><td class="px-5 py-6 text-[#7c8691]" colspan="3">Aún no hay alumnos matriculados en este grupo. La lista aparecerá cuando existan matrículas y el grupo esté aperturado.</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <div class="mt-4 flex justify-end"><ui-button type="button" [disabled]="true">Guardar asistencia del día</ui-button></div>
+} @else {
+  <p class="text-[#7c8691]">No se encontró ese grupo.</p>
+}

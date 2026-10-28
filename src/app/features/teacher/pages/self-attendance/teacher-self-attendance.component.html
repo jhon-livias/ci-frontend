@@ -1,0 +1,96 @@
+@if (group(); as current) {
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <p class="text-sm text-[#7c8691]">Docente / Asistencia del docente / Grupo {{ current.code }}</p>
+    <a class="text-sm font-semibold text-[#a9002d] underline" routerLink="/docencia/asistencia-docente">Volver a mis grupos</a>
+  </div>
+  @if (message()) {
+    <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
+  }
+  <section class="mt-6 rounded-2xl bg-white p-5 text-sm shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+    <div class="grid gap-2 md:grid-cols-2">
+      <p><b>Grupo:</b> {{ current.code }}</p>
+      <p><b>Fecha de inicio:</b> {{ current.startsAt | date:'dd/MM/yyyy':'UTC' }}</p>
+      <p><b>Idioma:</b> {{ current.language }}</p>
+      <p><b>Fecha de término:</b> {{ current.endsAt | date:'dd/MM/yyyy':'UTC' }}</p>
+      <p><b>Nivel:</b> {{ current.level }}</p>
+      <p><b>Horario:</b> {{ current.schedule }}</p>
+      <p><b>Tipo de estudio:</b> {{ current.studyType }}</p>
+      <p><b>Modalidad:</b> {{ current.modality }}</p>
+      @if (current.meetUrl) {
+        <p class="md:col-span-2"><b>Link del Meet:</b> <a class="text-[#a9002d] underline" [href]="current.meetUrl" rel="noopener" target="_blank">{{ current.meetUrl }}</a></p>
+      }
+    </div>
+  </section>
+  <div class="mt-6 grid gap-6 lg:grid-cols-3">
+    <div class="space-y-4">
+      <div class="rounded-xl bg-[#f07167] p-6 text-center text-white">
+        <p class="text-lg font-bold">{{ displayName() }}</p>
+        <p class="mt-1 text-sm">Código docente: {{ code() }}</p>
+      </div>
+      <div class="overflow-hidden rounded-xl bg-[#6b7280] text-center text-white">
+        <p class="bg-[#4b5563] py-2 text-lg font-semibold">{{ limaDate() }}</p>
+        <p class="py-6 font-mono text-4xl font-bold tracking-widest">{{ clock('hour') }}:{{ clock('minute') }}:{{ clock('second') }}</p>
+      </div>
+    </div>
+    <div class="space-y-6 lg:col-span-2">
+      <section class="overflow-hidden rounded-xl bg-white shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+        <h2 class="bg-[#b91c1c] py-2 text-center text-sm font-semibold text-white">Clases por empezar (marque su entrada aquí)</h2>
+        @if (canPunch()) {
+          <div class="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
+            <p>{{ current.code }} · {{ current.language }} · {{ current.schedule }}</p>
+            @if (todaySession()?.checkInAt) {
+              <span class="font-semibold text-[#1f8a4c]">Entrada {{ clockStamp(todaySession()?.checkInAt ?? null) }}</span>
+            } @else {
+              <ui-button type="button" (click)="checkIn()">Registrar</ui-button>
+            }
+          </div>
+        } @else {
+          <p class="p-4 text-sm text-[#7c8691]">Este grupo ya no admite marcaje de entrada.</p>
+        }
+      </section>
+      <section class="overflow-hidden rounded-xl bg-white shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+        <h2 class="bg-[#0f766e] py-2 text-center text-sm font-semibold text-white">Clases de hoy (finalice su clase aquí)</h2>
+        @if (canPunch()) {
+          <div class="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
+            <p>{{ current.code }} · {{ current.language }} · {{ current.schedule }}</p>
+            @if (todaySession()?.checkOutAt) {
+              <span class="font-semibold text-[#1f8a4c]">Salida {{ clockStamp(todaySession()?.checkOutAt ?? null) }}</span>
+            } @else {
+              <ui-button type="button" (click)="checkOut()">Registrar</ui-button>
+            }
+          </div>
+        } @else {
+          <p class="p-4 text-sm text-[#7c8691]">Este grupo ya no admite marcaje de salida.</p>
+        }
+      </section>
+    </div>
+  </div>
+  <section class="mt-6 overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#ece6e7] px-5 py-3">
+      <h2 class="font-semibold">Registro de asistencia por fechas — Grupo {{ current.code }}</h2>
+      <ui-button type="button" variant="soft" (click)="download()">Descargar reporte</ui-button>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[48rem] text-left text-sm">
+        <thead class="bg-[#faf6f7]"><tr><th class="px-5 py-3">Fecha</th><th class="px-5 py-3">Día</th><th class="px-5 py-3">Horario programado</th><th class="px-5 py-3">Hora de entrada</th><th class="px-5 py-3">Hora de salida</th><th class="px-5 py-3">Tipo de asistencia</th></tr></thead>
+        <tbody>
+          @for (row of sessions(); track row.id) {
+            <tr class="border-b border-[#ece6e7]">
+              <td class="px-5 py-3">{{ row.sessionDate.split('-').reverse().join('/') }}</td>
+              <td class="px-5 py-3">{{ weekday(row.sessionDate) }}</td>
+              <td class="px-5 py-3">{{ row.hours }}</td>
+              <td class="px-5 py-3">{{ clockStamp(row.checkInAt) }}</td>
+              <td class="px-5 py-3">{{ clockStamp(row.checkOutAt) }}</td>
+              <td class="px-5 py-3">{{ row.classType }}</td>
+            </tr>
+          } @empty {
+            <tr><td class="px-5 py-6 text-[#7c8691]" colspan="6">Aún no hay marcajes. Aparecerán cuando registres la entrada de una clase programada.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+} @else {
+  <p class="text-[#7c8691]">No se encontró ese grupo.</p>
+  <a class="mt-3 inline-block text-sm font-semibold text-[#a9002d] underline" routerLink="/docencia/asistencia-docente">Volver a mis grupos</a>
+}

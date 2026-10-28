@@ -1,0 +1,47 @@
+<h1 class="font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d] sm:text-3xl">{{ title() }}</h1>
+<p class="mt-2 text-sm text-[#7c8691]">Los grupos más recientes aparecen primero. Solo se muestran los asignados a tu cuenta.</p>
+@if (message()) {
+  <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
+}
+<section class="mt-6 overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[56rem] text-left text-sm">
+      <thead class="bg-[#faf6f7]">
+        <tr>
+          <th class="px-5 py-4">Grupo</th>
+          <th class="px-5 py-4">Idioma</th>
+          <th class="px-5 py-4">Nivel</th>
+          <th class="px-5 py-4">Tipo de estudio</th>
+          <th class="px-5 py-4">Modalidad</th>
+          <th class="px-5 py-4">Inicio</th>
+          <th class="px-5 py-4">Término</th>
+          <th class="px-5 py-4">Horario</th>
+          <th class="px-5 py-4">Estado</th>
+          <th class="px-5 py-4 text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (group of groups(); track group.id) {
+          <tr class="border-b border-[#ece6e7]">
+            <td class="px-5 py-4 font-medium">{{ group.code }}</td>
+            <td class="px-5 py-4">{{ group.language }}</td>
+            <td class="px-5 py-4">{{ group.level }}</td>
+            <td class="px-5 py-4">{{ group.studyType }}</td>
+            <td class="px-5 py-4">{{ group.modality }}</td>
+            <td class="px-5 py-4">{{ dateLabel(group.startsAt) }}</td>
+            <td class="px-5 py-4">{{ dateLabel(group.endsAt) }}</td>
+            <td class="px-5 py-4">{{ group.schedule }}</td>
+            <td class="px-5 py-4">{{ group.statusLabel }}</td>
+            <td class="px-5 py-4 text-center">
+              @if (canOpen(group)) {
+                <a class="inline-block rounded bg-[#ea580c] px-3 py-1 text-xs font-bold uppercase text-white" [routerLink]="['/docencia', action(), group.id]">{{ openLabel() }}</a>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr><td class="px-5 py-6 text-[#7c8691]" colspan="10">Aún no tienes grupos asignados.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

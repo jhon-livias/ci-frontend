@@ -1,0 +1,140 @@
+<main class="min-h-dvh bg-[#fcf9fa]" (click)="closePanels()">
+  <section class="relative min-h-dvh overflow-hidden bg-[#fcf9fa]">
+    <div class="relative z-30 flex h-18 items-center justify-between px-5 sm:h-20 sm:px-8">
+      <button
+        class="grid size-10 place-items-center rounded-lg text-[#5e5254] hover:bg-[#faf6f7] lg:hidden"
+        type="button"
+        (click)="toggleMenu()"
+        [attr.aria-expanded]="menuOpen()"
+        aria-controls="teacher-navigation"
+        aria-label="Abrir menú"
+      >
+        <svg aria-hidden="true" class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M4 7h16M4 12h16M4 17h16" />
+        </svg>
+      </button>
+      <p class="text-xs text-[#7c8691]"></p>
+      <div class="-mr-5 flex h-full items-center gap-3 rounded-bl-[2rem] bg-[#a9002d] px-5 text-white sm:-mr-8 sm:gap-4 sm:rounded-bl-[2.5rem] sm:px-8">
+        <img class="h-7 w-auto sm:h-9" src="/assets/layout/logo-profile.svg" alt="" />
+        <span class="font-[var(--font-geist)] text-lg font-black leading-[120%] sm:text-[28px]">UPRIT IDIOMAS</span>
+        <button class="grid size-8 place-items-center rounded-full hover:bg-white/15 sm:size-10" type="button" aria-label="Notificaciones" (click)="toggleNotifications($event)">
+          <img class="h-5 w-auto sm:h-7" src="/assets/layout/notification.svg" alt="" />
+        </button>
+        <button class="grid size-8 place-items-center rounded-full hover:bg-white/15 sm:size-11" type="button" aria-label="Ver perfil" (click)="toggleProfile($event)">
+          <img class="h-7 w-auto sm:h-10" src="/assets/layout/profile.svg" alt="" />
+        </button>
+      </div>
+    </div>
+    @if (menuOpen()) {
+      <button class="fixed inset-0 z-20 bg-black/20" type="button" (click)="menuOpen.set(false)" aria-label="Cerrar menú"></button>
+    }
+    <aside
+      id="teacher-navigation"
+      class="fixed inset-y-0 left-0 z-30 flex w-72 flex-col bg-[#a9002d] pt-24 text-white shadow-2xl transition-transform duration-200 lg:absolute lg:top-20 lg:translate-x-0 lg:rounded-tr-[4.5rem] lg:pt-8 lg:shadow-none"
+      [class.-translate-x-full]="!menuOpen()"
+      aria-label="Navegación de docente"
+    >
+      <nav class="space-y-1 px-3">
+        @for (item of navigation; track item.label) {
+          <a
+            [routerLink]="item.route"
+            class="flex min-h-12 items-center gap-3 rounded-lg px-4 text-sm font-semibold hover:bg-white/15"
+            [class.bg-[#c44760]]="isCurrent(item.section)"
+            [attr.aria-current]="isCurrent(item.section) ? 'page' : null"
+            (click)="menuOpen.set(false)"
+          >
+            <ng-container [ngTemplateOutlet]="navIcon" [ngTemplateOutletContext]="{ $implicit: item.icon }" />
+            {{ item.label }}
+          </a>
+        }
+      </nav>
+      <ng-template #navIcon let-icon>
+        <svg aria-hidden="true" class="size-5 shrink-0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24">
+          @switch (icon) {
+            @case ('home') {
+              <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z" />
+            }
+            @case ('self') {
+              <circle cx="12" cy="12" r="8" />
+              <path d="M12 8v4l3 2" />
+            }
+            @case ('students') {
+              <path d="M12 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" />
+              <path d="M5 20c1.2-3 3.4-4.5 7-4.5s5.8 1.5 7 4.5" />
+            }
+            @case ('justify') {
+              <path d="M7 4h10v16H7z" />
+              <path d="M10 8h4M10 12h4M10 16h2" />
+            }
+            @case ('grades') {
+              <path d="M4 19V7l8-3 8 3v12" />
+              <path d="M8 14h8" />
+            }
+            @default {
+              <circle cx="12" cy="8" r="3" />
+            }
+          }
+        </svg>
+      </ng-template>
+    </aside>
+    <section class="px-6 py-8 sm:px-10 sm:py-10 lg:ml-72 lg:px-14 lg:py-12">
+      @if (section === 'self') {
+        <app-teacher-group-list title="Asistencia del docente" action="asistencia-docente" mode="self" />
+      } @else if (section === 'self-detail') {
+        <app-teacher-self-attendance />
+      } @else if (section === 'students') {
+        <app-teacher-group-list title="Asistencia del alumno" action="asistencia-alumnos" mode="students" />
+      } @else if (section === 'student-detail') {
+        <app-teacher-student-attendance />
+      } @else if (section === 'justifications') {
+        <app-teacher-student-justifications />
+      } @else if (section === 'grades') {
+        <app-teacher-group-list title="Notas del alumno" action="notas" mode="grades" />
+      } @else if (section === 'grades-detail') {
+        <app-teacher-grades />
+      } @else if (section === 'profile') {
+        <app-account-profile />
+      } @else {
+        <p class="text-xs text-[#7c8691]">Inicio</p>
+        <h1 class="mt-5 font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d] sm:text-3xl">
+          Bienvenido a UPRIT IDIOMAS, {{ displayName() }}
+        </h1>
+        <p class="mt-2 text-sm text-[#7c8691]">Marca tu asistencia, toma lista y registra las calificaciones de tus grupos.</p>
+        <app-teacher-home-dashboard />
+      }
+    </section>
+    <aside class="absolute right-0 top-18 z-20 flex w-[min(100%,18rem)] flex-col rounded-bl-2xl bg-[#eed6db] px-4 py-4 text-[#1e1e1e] shadow-lg transition-transform sm:top-20 sm:w-72" [class.translate-x-full]="!profileOpen()" aria-label="Perfil de usuario" (click)="$event.stopPropagation()">
+      <a class="flex items-center gap-3 rounded-xl px-1 py-1 transition hover:bg-white/40" routerLink="/perfil" (click)="closePanels()">
+        <img class="size-9 shrink-0" src="/assets/layout/menu-profile.svg" alt="" />
+        <p class="text-sm font-semibold leading-snug">{{ displayName() }}</p>
+      </a>
+      <div class="mt-3 flex items-center gap-3">
+        <img class="size-9 shrink-0" src="/assets/layout/menu-logo.svg" alt="" />
+        <p class="text-sm font-semibold leading-snug">Universidad Privada de Trujillo - UPRIT</p>
+      </div>
+      <div class="mt-4 h-px bg-white/90"></div>
+      <button class="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-full bg-white text-sm font-semibold text-[#a81a39] shadow-sm transition hover:bg-[#fff8f9]" type="button" (click)="logout()">
+        <img class="size-4" src="/assets/layout/logout.svg" alt="" /> Cerrar Sesión
+      </button>
+    </aside>
+    <aside class="absolute right-0 top-18 z-20 flex max-h-[min(24rem,calc(100dvh-6rem))] w-[min(100%,18rem)] flex-col overflow-y-auto rounded-bl-2xl bg-[#eed6db] px-4 py-4 text-[#1e1e1e] shadow-lg transition-transform sm:top-20 sm:w-72" [class.translate-x-full]="!notificationsOpen()" aria-label="Notificaciones" (click)="$event.stopPropagation()">
+      <div class="flex items-center gap-3">
+        <img class="size-9" src="/assets/layout/notification.svg" alt="" />
+        <h2 class="text-sm font-semibold">Notificaciones</h2>
+      </div>
+      <div class="mt-4 h-px bg-white/90"></div>
+      @if (notifications().length === 0) {
+        <p class="mt-4 text-center text-sm text-[#5e5254]" role="status">No tienes notificaciones nuevas.</p>
+      } @else {
+        <ul class="mt-3 space-y-3" aria-live="polite">
+          @for (item of notifications(); track item.id) {
+            <li>
+              <p class="text-sm font-semibold">{{ item.title }}</p>
+              <p class="text-xs text-[#5e5254]">{{ item.body }}</p>
+            </li>
+          }
+        </ul>
+      }
+    </aside>
+  </section>
+</main>

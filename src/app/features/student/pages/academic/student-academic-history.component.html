@@ -1,0 +1,29 @@
+<h2 class="mb-4 border-b pb-2 text-2xl text-gray-700">Historial académico</h2>
+<div class="overflow-x-auto border-t-4 border-[#a9002d] bg-white p-4 shadow-sm">
+  <table class="w-full border border-gray-200 text-center text-sm">
+    <thead>
+      <tr class="border-b bg-gray-50 font-bold text-gray-700">
+        <th class="border-r px-2 py-3">Grupo</th><th class="border-r px-2 py-3">Idioma</th><th class="border-r px-2 py-3">Nivel</th><th class="border-r px-2 py-3">Fecha</th><th class="border-r px-2 py-3">Horario</th><th class="border-r px-2 py-3">Modalidad</th><th class="border-r px-2 py-3">Tipo de estudio</th><th class="border-r px-2 py-3">Estado</th><th class="px-2 py-3">Acción</th>
+      </tr>
+    </thead>
+    <tbody class="text-gray-600">
+      @if (rows().length === 0) {
+        <tr><td class="px-2 py-6 text-[#7c8691]" colspan="9">Aún no hay cursos. Aparecerán con tus matrículas.</td></tr>
+      }
+      @for (row of rows(); track row.id) {
+        <tr class="border-b">
+          <td class="border-r px-2 py-3 font-semibold">{{ row.groupCode }}</td>
+          <td class="border-r px-2 py-3">{{ row.language }}</td>
+          <td class="border-r px-2 py-3">{{ row.level }}</td>
+          <td class="border-r px-2 py-3">{{ row.enrolledAt | date:'dd/MM/yyyy' }}</td>
+          <td class="border-r px-2 py-3">{{ row.schedule }}</td>
+          <td class="border-r px-2 py-3">{{ row.modality }}</td>
+          <td class="border-r px-2 py-3">{{ row.studyType }}</td>
+          <td class="border-r px-2 py-3">{{ row.statusLabel }}</td>
+          <td class="px-2 py-3"><a class="rounded bg-green-600 px-4 py-1 text-xs font-bold text-white" [routerLink]="['/historial-academico', row.id]">Ver</a></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+@if (message()) { <p class="mt-3 text-sm text-[#a9002d]" role="alert">{{ message() }}</p> }

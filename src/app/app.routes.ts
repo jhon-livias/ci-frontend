@@ -4,10 +4,14 @@ import { AuthSessionService } from './core/auth/auth-session.service';
 import { administratorGuard } from './core/auth/administrator.guard';
 import { advisorGuard } from './core/auth/advisor.guard';
 import { directorGuard } from './core/auth/director.guard';
+import { teacherGuard } from './core/auth/teacher.guard';
+import { studentGuard } from './core/auth/student.guard';
 import {
   administratorMatchGuard,
   advisorMatchGuard,
   directorMatchGuard,
+  teacherMatchGuard,
+  studentMatchGuard,
   anonymousGuard,
   authenticatedGuard,
   passwordChangeGuard,
@@ -213,6 +217,110 @@ export const routes: Routes = [
       import('./features/director/pages/director-home/director-home.component').then((module) => module.DirectorHomeComponent),
   },
   {
+    path: 'docencia/asistencia-docente/:id',
+    title: 'Asistencia del docente | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, teacherGuard],
+    data: { section: 'self-detail' },
+    loadComponent: () =>
+      import('./features/teacher/pages/teacher-home/teacher-home.component').then((module) => module.TeacherHomeComponent),
+  },
+  {
+    path: 'docencia/asistencia-docente',
+    title: 'Asistencia del docente | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, teacherGuard],
+    data: { section: 'self' },
+    loadComponent: () =>
+      import('./features/teacher/pages/teacher-home/teacher-home.component').then((module) => module.TeacherHomeComponent),
+  },
+  {
+    path: 'docencia/asistencia-alumnos/:id',
+    title: 'Asistencia del alumno | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, teacherGuard],
+    data: { section: 'student-detail' },
+    loadComponent: () =>
+      import('./features/teacher/pages/teacher-home/teacher-home.component').then((module) => module.TeacherHomeComponent),
+  },
+  {
+    path: 'docencia/asistencia-alumnos',
+    title: 'Asistencia del alumno | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, teacherGuard],
+    data: { section: 'students' },
+    loadComponent: () =>
+      import('./features/teacher/pages/teacher-home/teacher-home.component').then((module) => module.TeacherHomeComponent),
+  },
+  {
+    path: 'docencia/justificacion-alumnos',
+    title: 'Justificación de alumnos | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, teacherGuard],
+    data: { section: 'justifications' },
+    loadComponent: () =>
+      import('./features/teacher/pages/teacher-home/teacher-home.component').then((module) => module.TeacherHomeComponent),
+  },
+  {
+    path: 'docencia/notas/:id',
+    title: 'Notas del alumno | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, teacherGuard],
+    data: { section: 'grades-detail' },
+    loadComponent: () =>
+      import('./features/teacher/pages/teacher-home/teacher-home.component').then((module) => module.TeacherHomeComponent),
+  },
+  {
+    path: 'docencia/notas',
+    title: 'Notas del alumno | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, teacherGuard],
+    data: { section: 'grades' },
+    loadComponent: () =>
+      import('./features/teacher/pages/teacher-home/teacher-home.component').then((module) => module.TeacherHomeComponent),
+  },
+  {
+    path: 'matricula/historial',
+    title: 'Historial de matrículas | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, studentGuard],
+    data: { section: 'history' },
+    loadComponent: () =>
+      import('./features/student/pages/student-home/student-home.component').then((module) => module.StudentHomeComponent),
+  },
+  {
+    path: 'matricula',
+    title: 'Registrar matrícula | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, studentGuard],
+    data: { section: 'enroll' },
+    loadComponent: () =>
+      import('./features/student/pages/student-home/student-home.component').then((module) => module.StudentHomeComponent),
+  },
+  {
+    path: 'historial-academico/:id',
+    title: 'Detalle del curso | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, studentGuard],
+    data: { section: 'course' },
+    loadComponent: () =>
+      import('./features/student/pages/student-home/student-home.component').then((module) => module.StudentHomeComponent),
+  },
+  {
+    path: 'historial-academico',
+    title: 'Historial académico | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, studentGuard],
+    data: { section: 'academic' },
+    loadComponent: () =>
+      import('./features/student/pages/student-home/student-home.component').then((module) => module.StudentHomeComponent),
+  },
+  {
+    path: 'historial-pagos',
+    title: 'Historial de pagos | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, studentGuard],
+    data: { section: 'payments' },
+    loadComponent: () =>
+      import('./features/student/pages/student-home/student-home.component').then((module) => module.StudentHomeComponent),
+  },
+  {
+    path: 'examenes',
+    title: 'Examen de suficiencia | Centro de Idiomas UPRIT',
+    canActivate: [authenticatedGuard, studentGuard],
+    data: { section: 'exams' },
+    loadComponent: () =>
+      import('./features/student/pages/student-home/student-home.component').then((module) => module.StudentHomeComponent),
+  },
+  {
     path: 'perfil',
     title: 'Perfil | Centro de Idiomas UPRIT',
     canMatch: [administratorMatchGuard],
@@ -242,6 +350,24 @@ export const routes: Routes = [
       import('./features/director/pages/director-home/director-home.component').then((module) => module.DirectorHomeComponent),
   },
   {
+    path: 'perfil',
+    title: 'Perfil | Centro de Idiomas UPRIT',
+    canMatch: [teacherMatchGuard],
+    canActivate: [authenticatedGuard],
+    data: { section: 'profile' },
+    loadComponent: () =>
+      import('./features/teacher/pages/teacher-home/teacher-home.component').then((module) => module.TeacherHomeComponent),
+  },
+  {
+    path: 'perfil',
+    title: 'Perfil | Centro de Idiomas UPRIT',
+    canMatch: [studentMatchGuard],
+    canActivate: [authenticatedGuard],
+    data: { section: 'profile' },
+    loadComponent: () =>
+      import('./features/student/pages/student-home/student-home.component').then((module) => module.StudentHomeComponent),
+  },
+  {
     path: 'inicio',
     title: 'Inicio | Centro de Idiomas UPRIT',
     canMatch: [administratorMatchGuard],
@@ -268,6 +394,24 @@ export const routes: Routes = [
     data: { section: 'home' },
     loadComponent: () =>
       import('./features/director/pages/director-home/director-home.component').then((module) => module.DirectorHomeComponent),
+  },
+  {
+    path: 'inicio',
+    title: 'Inicio | Centro de Idiomas UPRIT',
+    canMatch: [teacherMatchGuard],
+    canActivate: [authenticatedGuard],
+    data: { section: 'home' },
+    loadComponent: () =>
+      import('./features/teacher/pages/teacher-home/teacher-home.component').then((module) => module.TeacherHomeComponent),
+  },
+  {
+    path: 'inicio',
+    title: 'Inicio | Centro de Idiomas UPRIT',
+    canMatch: [studentMatchGuard],
+    canActivate: [authenticatedGuard],
+    data: { section: 'home' },
+    loadComponent: () =>
+      import('./features/student/pages/student-home/student-home.component').then((module) => module.StudentHomeComponent),
   },
   {
     path: 'inicio',

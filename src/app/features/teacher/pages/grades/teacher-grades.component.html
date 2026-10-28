@@ -1,0 +1,41 @@
+@if (group(); as current) {
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d]">Notas del alumno — Grupo {{ current.code }}</h1>
+    <a class="text-sm font-semibold text-[#a9002d] underline" routerLink="/docencia/notas">Volver</a>
+  </div>
+  @if (message()) {
+    <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p>
+  }
+  <section class="mt-6 rounded-2xl bg-white p-5 text-sm shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+    <p><b>Grupo:</b> {{ current.code }}</p>
+    <p><b>Idioma:</b> {{ current.language }} · <b>Nivel:</b> {{ current.level }}</p>
+    <p><b>Horario:</b> {{ current.schedule }}</p>
+    <p><b>Inicio:</b> {{ current.startsAt | date:'dd/MM/yyyy':'UTC' }} · <b>Término:</b> {{ current.endsAt | date:'dd/MM/yyyy':'UTC' }}</p>
+  </section>
+  <p class="mt-4 text-sm text-[#7c8691]">Las notas se editan con Editar notas. Al culminar el grupo hay dos semanas para cerrarlas. Generar acta usa el formato del Centro de Idiomas cuando existan calificaciones.</p>
+  <section class="mt-6 overflow-x-auto rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
+    <table class="w-full min-w-[48rem] border-collapse text-center text-sm">
+      <thead>
+        <tr>
+          <th class="border p-2 text-left"></th>
+          <th class="border p-2 font-normal">Listening and reading exam (20)</th>
+          <th class="border p-2 font-normal">Writing exam (20)</th>
+          <th class="border p-2 font-normal">English test 1 (20)</th>
+          <th class="border p-2 font-normal">Plataforma Altissia y participación (20)</th>
+          <th class="border p-2 font-normal">Final test (20)</th>
+          <th class="border p-2">Nota (100)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="border px-4 py-6 text-left text-[#7c8691]" colspan="7">Aún no hay alumnos en este grupo. Las filas de notas aparecerán con las matrículas.</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <div class="mt-4 flex flex-wrap justify-end gap-3">
+    <ui-button type="button" [disabled]="true">Editar notas</ui-button>
+    <ui-button type="button" variant="soft" [disabled]="true">Generar acta</ui-button>
+    <ui-button type="button" [disabled]="true">Guardar</ui-button>
+  </div>
+} @else {
+  <p class="text-[#7c8691]">No se encontró ese grupo.</p>
+}

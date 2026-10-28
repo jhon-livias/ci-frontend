@@ -1,0 +1,48 @@
+@if (message()) {
+  <p class="text-sm text-[#a9002d]" role="alert">{{ message() }}</p>
+}
+@if (workspace(); as data) {
+  @if (data.student?.type === 'INTERNAL') {
+    <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div class="rounded-lg border border-indigo-100 bg-indigo-50 p-4">
+        <p class="text-xs uppercase tracking-wide text-[#7c8691]">Carrera profesional</p>
+        <p class="mt-1 font-semibold text-[#1e1e1e]">{{ data.student.career || 'Aún no está registrada.' }}</p>
+      </div>
+      <div class="rounded-lg border border-indigo-100 bg-indigo-50 p-4">
+        <p class="text-xs uppercase tracking-wide text-[#7c8691]">Facultad / escuela</p>
+        <p class="mt-1 font-semibold text-[#1e1e1e]">{{ data.student.faculty || data.student.school || 'Aún no está registrada.' }}</p>
+      </div>
+    </div>
+    <div class="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div class="border-b bg-gray-100 px-5 py-3 font-semibold text-gray-700">Tabla de equivalencias</div>
+      <p class="px-5 py-4 text-sm text-[#7c8691]">La tabla de equivalencias de tu carrera se mostrará cuando el centro la publique.</p>
+    </div>
+  }
+  <div class="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
+    <div class="border-b bg-gray-100 px-5 py-3 font-semibold text-gray-700">Información de examen de suficiencia</div>
+    <div class="p-5 text-sm text-gray-600">
+      <p>Consulta la información, registra tu examen de suficiencia y revisa posteriormente tus resultados.</p>
+      <p class="mt-3 rounded border border-red-200 bg-red-50 p-3 text-red-800">Para registrarte, ingresa al menú <strong>Examen de suficiencia</strong>.</p>
+    </div>
+  </div>
+  <div class="rounded-lg border border-gray-200 bg-white">
+    <div class="border-b bg-gray-100 px-5 py-3 font-semibold text-gray-700">Próximas clases</div>
+    @if (data.nextClasses.length === 0) {
+      <p class="px-5 py-4 text-sm text-[#7c8691]">Hoy no tienes clases de un grupo activo.</p>
+    } @else {
+      <ul class="divide-y">
+        @for (item of data.nextClasses; track item.code) {
+          <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+            <div>
+              <p class="font-semibold text-[#1e1e1e]">{{ item.language }} {{ item.level }} · {{ item.code }}</p>
+              <p class="text-sm text-[#7c8691]">{{ item.schedule }}</p>
+            </div>
+            @if (item.meetUrl) {
+              <a class="rounded bg-[#a9002d] px-3 py-2 text-xs font-bold text-white" [href]="item.meetUrl" target="_blank" rel="noopener noreferrer">Link a clase</a>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </div>
+}

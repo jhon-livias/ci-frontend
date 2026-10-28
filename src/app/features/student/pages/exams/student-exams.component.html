@@ -1,0 +1,71 @@
+<h2 class="mb-4 border-b pb-2 text-2xl text-gray-700">Examen de suficiencia</h2>
+<div class="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+  <div class="border-b bg-gray-100 p-4 font-semibold text-gray-700">Registro de examen de suficiencia</div>
+  <div class="p-6">
+    <div class="mb-6 rounded border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+      <p class="mb-1 font-bold">Información del examen</p>
+      <p>El examen de suficiencia determina el nivel de conocimiento del estudiante. El resultado indicará el nivel en el que corresponde matricularse.</p>
+    </div>
+    <div class="mb-6 rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+      <p class="mb-1 font-bold">Próxima fecha del examen de suficiencia</p>
+      <p>{{ upcoming() ? (upcoming() | date:'fullDate') : 'Próximamente se publicará una nueva fecha cuando el director cree un grupo de suficiencia.' }}</p>
+    </div>
+    <label class="mb-1 block text-sm font-bold text-gray-700" for="idioma-examen">Idioma a evaluar</label>
+    <select id="idioma-examen" class="mb-6 w-full max-w-md rounded border border-gray-300 p-2" [value]="language()" (change)="onSelectLanguage($event)">
+      <option value="">-- Selecciona un idioma --</option>
+      @for (item of languages(); track item) {
+        <option [value]="item">{{ item }}</option>
+      }
+    </select>
+    <div class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+      <strong>Costo del examen: {{ amount() ? 'S/ ' + amount() : 'Tarifa no configurada' }}</strong><br />
+      <span class="text-xs">Después de registrar y confirmar el pago se podrá consultar el resultado cuando sea publicado.</span>
+    </div>
+    <label class="mt-5 flex items-start gap-3 text-sm text-gray-700">
+      <input class="mt-1 accent-[#a9002d]" type="checkbox" [checked]="terms()" (change)="onTerms($event)" />
+      <span>Acepto los <button class="font-semibold text-[#a9002d] hover:underline" type="button" (click)="termsOpen.set(true)">Términos y condiciones</button> del examen de suficiencia.</span>
+    </label>
+    <div class="mt-6">
+      <ui-button type="button" [disabled]="!language() || !terms() || !amount() || loading()" (click)="register()">Pagar y registrar examen</ui-button>
+    </div>
+    @if (message()) {
+      <p class="mt-4 text-sm" [class.text-[#a9002d]]="tone() === 'error'" [class.text-green-700]="tone() === 'ok'" role="status">{{ message() }}</p>
+    }
+    @if (registered(); as exam) {
+      <h3 class="mt-8 mb-3 text-lg font-bold text-gray-800">Datos del examen registrado</h3>
+      <div class="overflow-x-auto rounded-lg border">
+        <table class="w-full min-w-[700px] text-left text-sm">
+          <thead class="bg-gray-100 text-gray-700"><tr><th class="p-3">Código / DNI</th><th class="p-3">Nombres y apellidos</th><th class="p-3">Idioma</th><th class="p-3">Fecha del examen</th><th class="p-3">Modalidad</th><th class="p-3">Enlace</th></tr></thead>
+          <tbody>
+            <tr class="border-t">
+              <td class="p-3">{{ identity().documentNumber }}</td>
+              <td class="p-3">{{ identity().name }}</td>
+              <td class="p-3">{{ exam.language }}</td>
+              <td class="p-3">{{ exam.examDate ? (exam.examDate | date:'dd/MM/yyyy') : 'Por confirmar' }}</td>
+              <td class="p-3">{{ exam.modality }}</td>
+              <td class="p-3">{{ exam.meetUrl || 'Se publicará el enlace institucional.' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+@if (termsOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div class="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white">
+      <div class="flex items-center justify-between border-b p-5">
+        <h3 class="text-lg font-bold">Términos y condiciones del examen</h3>
+        <button type="button" (click)="termsOpen.set(false)" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="space-y-3 p-6 text-sm text-gray-600">
+        <p>El examen de suficiencia evalúa los conocimientos del estudiante en el idioma seleccionado.</p>
+        <p>El resultado se expresa en una escala de 1 a 100 y determinará el nivel correspondiente para la matrícula.</p>
+        <p>El pago corresponde al derecho de evaluación. Queda pendiente hasta que la pasarela lo confirme.</p>
+      </div>
+      <div class="flex justify-end border-t p-4">
+        <ui-button type="button" (click)="termsOpen.set(false)">Cerrar</ui-button>
+      </div>
+    </div>
+  </div>
+}
