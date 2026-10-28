@@ -1,5 +1,6 @@
 <h1 class="font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d] sm:text-3xl">Justificación de docentes</h1>
 <p class="mt-2 text-sm text-[#7c8691]">Registro y seguimiento de las justificaciones de faltas de los docentes. La descripción y el documento son obligatorios al justificar.</p>
+@if (message()) { <p class="mt-4 text-[#92001f]" role="alert">{{ message() }}</p> }
 <section class="mt-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
   <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
     <ui-field id="just-dni" label="DNI o código de docente" [(value)]="query" />
@@ -38,9 +39,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td class="px-5 py-6 text-[#7c8691]" colspan="9">Aún no hay faltas de docentes. Aparecerán cuando se registre asistencia en un grupo aperturado. El estado inicial será Injustificado.</td>
-        </tr>
+        @for (row of rows(); track row.id) { <tr class="border-t border-[#ece6e7]"><td class="px-5 py-3">{{ row.date }}</td><td class="px-5 py-3">—</td><td class="px-5 py-3">{{ row.documentNumber }}</td><td class="px-5 py-3">{{ row.teacherName }}</td><td class="px-5 py-3">{{ row.language }}</td><td class="px-5 py-3">{{ row.level }}</td><td class="px-5 py-3">{{ row.groupCode }}</td><td class="px-5 py-3">{{ row.status }} @if (row.reason) { <span class="block text-xs text-[#5e5254]">{{ row.reason }}</span> }</td><td class="px-5 py-3 text-center">@if (row.attachmentName) { <button class="text-[#a9002d] underline" type="button" (click)="download(row)">Adjunto</button> } @else { — }</td></tr> } @empty { <tr><td class="px-5 py-6 text-[#7c8691]" colspan="9">No hay faltas que coincidan con los filtros.</td></tr> }
       </tbody>
     </table>
   </div>

@@ -33,6 +33,7 @@ export interface TeacherSession {
   readonly checkInAt: string | null;
   readonly checkOutAt: string | null;
 }
+export interface TeacherAbsence { readonly id: string; readonly date: string; readonly groupCode: string; readonly status: 'Injustificado' | 'Justificado'; }
 
 export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'JUSTIFIED_ABSENCE' | 'LATE';
 export interface TeachingStudent { readonly userId: string; readonly code: string; readonly documentNumber: string; readonly name: string; readonly status: AttendanceStatus | null; }
@@ -108,6 +109,8 @@ export class TeacherWorkspaceService {
   async checkOut(groupId: string): Promise<void> {
     await firstValueFrom(this.http.post(`${this.url}/groups/${groupId}/check-out`, {}));
   }
+  async selfAbsences(groupId: string): Promise<readonly TeacherAbsence[]> { const response = await firstValueFrom(this.http.post<unknown>(`${this.url}/groups/${groupId}/self-absences`, {})); const rows = isRecord(response) && Array.isArray(response['absences']) ? response['absences'] : []; return rows.flatMap((row) => isRecord(row) && TEXT(row['id'], 64) && TEXT(row['date'], 16) && TEXT(row['groupCode'], 16) && (row['status'] === 'Injustificado' || row['status'] === 'Justificado') ? [{ id: row['id'], date: row['date'], groupCode: row['groupCode'], status: row['status'] }] : []); }
+  async justifySelfAbsence(groupId: string, sessionId: string, reason: string, file: { name: string; contentType: string; base64: string }): Promise<void> { await firstValueFrom(this.http.post(`${this.url}/groups/${groupId}/self-absences/justify`, { sessionId, reason, file })); }
 
   async roster(groupId: string): Promise<{ date: string; students: readonly TeachingStudent[] }> {
     const response = await firstValueFrom(this.http.post<unknown>(`${this.url}/groups/${groupId}/roster`, {}));

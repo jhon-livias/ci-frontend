@@ -45,6 +45,7 @@ export interface StudentAbsenceRow {
   readonly status: AbsenceStatus;
   readonly attachmentName?: string | null;
 }
+export interface TeacherAbsenceRow { readonly id: string; readonly teacherAbsenceId: string | null; readonly date: string; readonly documentNumber: string; readonly teacherName: string; readonly groupCode: string; readonly language: string; readonly level: string; readonly status: AbsenceStatus; readonly reason: string | null; readonly attachmentName: string | null; }
 
 export interface AcademicFollowUp {
   readonly absenceLimit: number;
@@ -115,4 +116,6 @@ export class FollowUpService {
     if (!isRecord(response) || !TEXT(response['name'], 160) || !TEXT(response['contentType'], 100) || !TEXT(response['base64'], 7000000)) throw new Error('El adjunto recibido no es válido.');
     return { name: response['name'], contentType: response['contentType'], base64: response['base64'] };
   }
+  async teacherAbsences(query = '', date = '', status = ''): Promise<readonly TeacherAbsenceRow[]> { const response = await firstValueFrom(this.http.get<unknown>(`${this.url}/teacher-absences`, { params: { query, date, status } })); const rows = isRecord(response) && Array.isArray(response['absences']) ? response['absences'] : []; return rows.flatMap((row) => isRecord(row) && TEXT(row['id'],64) && (row['teacherAbsenceId'] === null || TEXT(row['teacherAbsenceId'],64)) && TEXT(row['date'],16) && TEXT(row['documentNumber'],16) && TEXT(row['teacherName'],200) && TEXT(row['groupCode'],16) && TEXT(row['language'],80) && TEXT(row['level'],80) && (row['status'] === 'Injustificado' || row['status'] === 'Justificado') && (row['reason'] === null || TEXT(row['reason'],500)) && (row['attachmentName'] === null || TEXT(row['attachmentName'],160)) ? [{ id: row['id'], teacherAbsenceId: row['teacherAbsenceId'], date: row['date'], documentNumber: row['documentNumber'], teacherName: row['teacherName'], groupCode: row['groupCode'], language: row['language'], level: row['level'], status: row['status'], reason: row['reason'], attachmentName: row['attachmentName'] }] : []); }
+  async teacherAttachment(teacherAbsenceId: string): Promise<{ name: string; contentType: string; base64: string }> { const response = await firstValueFrom(this.http.get<unknown>(`${this.url}/teacher-absences/${teacherAbsenceId}/attachment`)); if (!isRecord(response) || !TEXT(response['name'],160) || !TEXT(response['contentType'],100) || !TEXT(response['base64'],7000000)) throw new Error('El adjunto recibido no es válido.'); return { name: response['name'], contentType: response['contentType'], base64: response['base64'] }; }
 }

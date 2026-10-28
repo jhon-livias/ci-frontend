@@ -5,7 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { interval } from 'rxjs';
 
 import { AuthSessionService } from '../../../../core/auth/auth-session.service';
-import { TeacherWorkspaceService, type TeacherSession, type TeachingGroup } from '../../data-access/teacher-workspace.service';
+import { TeacherWorkspaceService, type TeacherAbsence, type TeacherSession, type TeachingGroup } from '../../data-access/teacher-workspace.service';
 import { UiButtonComponent } from '../../../../shared/ui/button/ui-button.component';
 
 @Component({
@@ -21,6 +21,10 @@ export class TeacherSelfAttendanceComponent implements OnInit {
   protected readonly now = signal(new Date());
   protected readonly group = signal<TeachingGroup | null>(null);
   protected readonly sessions = signal<readonly TeacherSession[]>([]);
+  protected readonly absences = signal<readonly TeacherAbsence[]>([]);
+  protected readonly absenceId = signal('');
+  protected readonly reason = signal('');
+  protected readonly file = signal<{ name: string; contentType: string; base64: string } | null>(null);
   protected readonly message = signal('');
   protected readonly displayName = computed(() => this.session.user()?.displayName || 'Docente');
   protected readonly code = computed(() => this.session.user()?.username || '');
@@ -96,6 +100,18 @@ export class TeacherSelfAttendanceComponent implements OnInit {
     URL.revokeObjectURL(url);
   }
 
+  protected async chooseFile(event: Event): Promise<void> {
+    const input = (event.target as HTMLInputElement).files?.item(0); this.file.set(null);
+    if (!input || !['application/pdf', 'image/jpeg', 'image/png'].includes(input.type) || input.size > 5 * 1024 * 1024) { if (input) this.message.set('El adjunto debe ser PDF, JPG o PNG y no superar 5 MB.'); return; }
+    const bytes = new Uint8Array(await input.arrayBuffer()); let binary = ''; for (const byte of bytes) binary += String.fromCharCode(byte);
+    this.file.set({ name: input.name, contentType: input.type, base64: btoa(binary) });
+  }
+  protected async justifyOwnAbsence(): Promise<void> {
+    const group = this.group(); const file = this.file();
+    if (!group || !this.absenceId() || !this.reason().trim() || !file) { this.message.set('Selecciona una falta e indica el motivo y adjunto obligatorios.'); return; }
+    try { await this.api.justifySelfAbsence(group.id, this.absenceId(), this.reason().trim(), file); this.message.set('La justificación fue registrada.'); this.absenceId.set(''); this.reason.set(''); this.file.set(null); this.absences.set(await this.api.selfAbsences(group.id)); } catch { this.message.set('No se pudo registrar la justificación.'); }
+  }
+
   private isoDate(value: Date): string {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima', year: 'numeric', month: '2-digit', day: '2-digit' }).format(value);
   }
@@ -107,6 +123,7 @@ export class TeacherSelfAttendanceComponent implements OnInit {
       const groups = await this.api.groups();
       this.group.set(groups.find((item) => item.id === id) ?? null);
       this.sessions.set(await this.api.sessions(id));
+      this.absences.set(await this.api.selfAbsences(id));
     } catch {
       this.message.set('No se pudo cargar la asistencia del docente.');
     }
