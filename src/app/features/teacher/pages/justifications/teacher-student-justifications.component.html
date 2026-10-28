@@ -1,30 +1,11 @@
-<h1 class="font-[var(--font-heading)] text-2xl font-semibold tracking-tight text-[#a9002d] sm:text-3xl">Justificación de alumnos</h1>
-<p class="mt-2 text-sm text-[#7c8691]">Las faltas aparecen como Injustificado. Al justificar se pide una descripción obligatoria; el documento es opcional.</p>
+<h1 class="font-[var(--font-heading)] text-2xl font-semibold text-[#a9002d]">Justificación de alumnos</h1>
+<p class="mt-2 text-sm text-[#7c8691]">El motivo es obligatorio. Puedes adjuntar un PDF, JPG o PNG de hasta 5 MB.</p>
+@if (message()) { <p class="mt-4" role="status">{{ message() }}</p> }
 <section class="mt-6 rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
-  <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-    <ui-field id="ja-dni" label="DNI" [(value)]="query" />
-    <label class="block">
-      <span class="mb-1.5 block text-sm font-medium">Fecha</span>
-      <input class="h-11 w-full rounded-lg border border-[#ece6e7] px-3" type="date" [value]="date()" (input)="setDate($event)" />
-    </label>
-    <label class="block">
-      <span class="mb-1.5 block text-sm font-medium">Estado</span>
-      <select class="h-11 w-full rounded-lg border border-[#ece6e7] px-3" [value]="status()" (change)="setStatus($event)">
-        <option value="Injustificado">Injustificado</option>
-        <option value="Justificado">Justificado</option>
-      </select>
-    </label>
-  </div>
-  <div class="mt-4 flex gap-3">
-    <ui-button type="button">Filtrar</ui-button>
-    <ui-button type="button" variant="soft" (click)="clear()">Limpiar</ui-button>
-  </div>
-</section>
-<section class="mt-6 overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgb(30_30_30_/_8%)]">
-  <table class="w-full min-w-[48rem] text-left text-sm">
-    <thead class="bg-[#faf6f7]"><tr><th class="px-5 py-4">Fecha</th><th class="px-5 py-4">DNI</th><th class="px-5 py-4">Alumno</th><th class="px-5 py-4">Grupo</th><th class="px-5 py-4">Idioma</th><th class="px-5 py-4">Nivel</th><th class="px-5 py-4">Estado</th><th class="px-5 py-4">Acción</th></tr></thead>
-    <tbody>
-      <tr><td class="px-5 py-6 text-[#7c8691]" colspan="8">Aún no hay faltas de alumnos. Aparecerán cuando registres una falta (F) en un grupo aperturado.</td></tr>
-    </tbody>
-  </table>
+  <label class="block text-sm font-medium">Grupo<select class="mt-1 h-11 w-full rounded-lg border px-3" [value]="groupId()" (change)="chooseGroup($event)"><option value="">Selecciona un grupo</option>@for (group of groups(); track group.id) { <option [value]="group.id">{{ group.code }} · {{ group.language }} {{ group.level }}</option> }</select></label>
+  <div class="mt-5 overflow-x-auto"><table class="w-full text-left text-sm"><thead><tr><th class="p-3">Seleccionar</th><th class="p-3">Fecha</th><th class="p-3">DNI</th><th class="p-3">Alumno</th></tr></thead><tbody>@for (row of rows(); track row.id) { <tr class="border-t"><td class="p-3"><input type="radio" name="absence" [checked]="selected() === row.id" (change)="selectAbsence(row.id)" aria-label="Seleccionar falta de {{ row.studentName }}"></td><td class="p-3">{{ row.date }}</td><td class="p-3">{{ row.documentNumber }}</td><td class="p-3">{{ row.studentName }}</td></tr> } @empty { <tr><td class="p-4 text-[#7c8691]" colspan="4">Selecciona un grupo con faltas injustificadas.</td></tr> }</tbody></table></div>
+  <label class="mt-5 block text-sm font-medium">Motivo<textarea class="mt-1 min-h-24 w-full rounded-lg border p-3" [value]="reason()" (input)="setReason($event)" required></textarea></label>
+  <label class="mt-4 block text-sm font-medium">Adjunto opcional<input class="mt-1 block" type="file" accept="application/pdf,image/jpeg,image/png" (change)="selectFile($event)"></label>
+  @if (file(); as attachment) { <p class="mt-2 text-sm text-[#1f8a4c]">Archivo listo: {{ attachment.name }}</p> }
+  <div class="mt-6 flex justify-end"><ui-button type="button" [disabled]="saving()" (click)="save()">{{ saving() ? 'Guardando…' : 'Justificar falta' }}</ui-button></div>
 </section>
