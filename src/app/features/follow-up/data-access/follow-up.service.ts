@@ -95,4 +95,13 @@ export class FollowUpService {
     if (!isOverview(response)) throw new Error('La consulta de seguimiento no es válida.');
     return response;
   }
+
+  async absences(query = '', date = '', status = ''): Promise<readonly StudentAbsenceRow[]> {
+    const response = await firstValueFrom(this.http.get<unknown>(`${this.url}/absences`, { params: { query, date, status } }));
+    const rows = isRecord(response) && Array.isArray(response['absences']) ? response['absences'] : [];
+    return rows.flatMap((row) => isAbsence(row) ? [row] : []);
+  }
+  async justify(attendanceId: string, reason: string, file?: { name: string; contentType: string; base64: string }): Promise<void> {
+    await firstValueFrom(this.http.post(`${this.url}/absences/justify`, { attendanceId, reason, ...(file ? { file } : {}) }));
+  }
 }
