@@ -21,6 +21,12 @@
         type="password"
       />
 
+      @if (needsCode()) {
+        <label class="block text-sm font-semibold" for="totp-code">Código de autenticación
+          <input id="totp-code" class="mt-1 h-11 w-full rounded-xl border border-[#eed6db] px-3 font-normal" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6 dígitos de la aplicación" [value]="totpCode()" (input)="totpCode.set($any($event.target).value)" />
+        </label>
+      }
+
       @if (notice(); as message) {
         <ui-alert id="login-notice" [tone]="message.tone">{{ message.text }}</ui-alert>
       }

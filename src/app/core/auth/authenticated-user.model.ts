@@ -11,4 +11,5 @@ export interface AuthenticatedUser {
 export interface LoginRequest {
   readonly username: string;
   readonly password: string;
+  readonly totpCode?: string;
 }

@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormField, FormRoot, form, minLength, required } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -29,6 +30,8 @@ export class LoginPageComponent {
   private readonly recaptcha = inject(RecaptchaService);
   private readonly route = inject(ActivatedRoute);
   protected readonly credentials = signal<LoginCredentials>({ username: '', password: '' });
+  protected readonly totpCode = signal('');
+  protected readonly needsCode = signal(this.route.snapshot.queryParamMap.get('google') === 'totp');
   protected readonly loginForm = form(this.credentials, (path) => {
     required(path.username, { message: 'Ingresa tu usuario institucional.' });
     required(path.password, { message: 'Ingresa tu contraseña.' });
@@ -52,14 +55,16 @@ export class LoginPageComponent {
     this.isSubmitting.set(true);
     try {
       const recaptchaToken = await this.recaptcha.executeLogin();
-      const authenticatedSession = await this.authApi.login(this.credentials(), recaptchaToken);
+      const code = this.totpCode().trim();
+      const authenticatedSession = await this.authApi.login({ ...this.credentials(), ...(code ? { totpCode: code } : {}) }, recaptchaToken);
       this.session.start(authenticatedSession);
       await this.router.navigateByUrl(this.session.defaultRoute());
-    } catch {
-      this.notice.set({
-        text: 'No pudimos iniciar sesión. Verifica tus credenciales e inténtalo nuevamente.',
-        tone: 'error',
-      });
+    } catch (error) {
+      const text = error instanceof HttpErrorResponse && typeof error.error?.message === 'string'
+        ? error.error.message
+        : 'No pudimos iniciar sesión. Verifica tus credenciales e inténtalo nuevamente.';
+      if (text.includes('código') || this.route.snapshot.queryParamMap.get('google') === 'totp') this.needsCode.set(true);
+      this.notice.set({ text, tone: 'error' });
     } finally {
       this.isSubmitting.set(false);
     }
@@ -83,6 +88,8 @@ const googleLoginNotice = (reason: string | null): { text: string; tone: AlertTo
       };
     case 'unconfigured':
       return { text: 'El ingreso con Google todavía no está configurado.', tone: 'info' };
+    case 'totp':
+      return { text: 'Esta cuenta usa autenticación de dos pasos. Ingresa con tu contraseña y el código de la aplicación.', tone: 'warning' };
     case 'failed':
       return { text: 'No se pudo completar el ingreso con Google.', tone: 'error' };
     default:
