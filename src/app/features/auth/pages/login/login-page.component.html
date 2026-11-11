@@ -2,6 +2,18 @@
   <section aria-labelledby="login-title">
     <h1 class="sr-only" id="login-title">Iniciar sesión</h1>
 
+    @if (enrollment(); as enroll) {
+      <form class="space-y-4" (submit)="confirmEnrollment($event)">
+        <p class="text-sm">Antes de entrar, activa la autenticación en Google Authenticator o Microsoft Authenticator.</p>
+        <img class="mx-auto size-52" [src]="enroll.qr" alt="Código para activar la autenticación de dos pasos" />
+        <p class="break-all text-center font-mono text-sm font-semibold text-[#a9002d]">{{ enroll.secret }}</p>
+        <label class="block text-sm font-semibold" for="enroll-code">Código de la aplicación
+          <input id="enroll-code" class="mt-1 h-11 w-full rounded-xl border border-[#eed6db] px-3 font-normal" inputmode="numeric" autocomplete="one-time-code" maxlength="6" [value]="enrollCode()" (input)="enrollCode.set($any($event.target).value)" />
+        </label>
+        @if (notice(); as message) { <ui-alert [tone]="message.tone">{{ message.text }}</ui-alert> }
+        <ui-button [disabled]="isSubmitting()" [fullWidth]="true" [pill]="true" type="submit">{{ isSubmitting() ? 'Activando…' : 'Activar y entrar' }}</ui-button>
+      </form>
+    } @else {
     <form [formRoot]="loginForm" (submit)="submit()" class="space-y-4">
       <ui-field
         [formField]="loginForm.username"
@@ -85,5 +97,6 @@
         ¿Olvidaste tu contraseña?
       </a>
     </div>
+    }
   </section>
 </app-auth-layout>

@@ -32,6 +32,8 @@ export class LoginPageComponent {
   protected readonly credentials = signal<LoginCredentials>({ username: '', password: '' });
   protected readonly totpCode = signal('');
   protected readonly needsCode = signal(this.route.snapshot.queryParamMap.get('google') === 'totp');
+  protected readonly enrollment = signal<{ token: string; secret: string; qr: string } | null>(null);
+  protected readonly enrollCode = signal('');
   protected readonly loginForm = form(this.credentials, (path) => {
     required(path.username, { message: 'Ingresa tu usuario institucional.' });
     required(path.password, { message: 'Ingresa tu contraseña.' });
@@ -57,6 +59,15 @@ export class LoginPageComponent {
       const recaptchaToken = await this.recaptcha.executeLogin();
       const code = this.totpCode().trim();
       const authenticatedSession = await this.authApi.login({ ...this.credentials(), ...(code ? { totpCode: code } : {}) }, recaptchaToken);
+      if ('enrollmentToken' in authenticatedSession) {
+        const setup = await this.authApi.beginEnrollment(authenticatedSession.enrollmentToken);
+        this.enrollment.set({
+          token: authenticatedSession.enrollmentToken,
+          secret: setup.secret,
+          qr: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(setup.qrSvg)}`,
+        });
+        return;
+      }
       this.session.start(authenticatedSession);
       await this.router.navigateByUrl(this.session.defaultRoute());
     } catch (error) {
@@ -68,6 +79,26 @@ export class LoginPageComponent {
     } finally {
       this.isSubmitting.set(false);
     }
+  }
+
+  protected async confirmEnrollment(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+    const current = this.enrollment();
+    if (!current || !/^\d{6}$/.test(this.enrollCode().trim())) {
+      this.notice.set({ text: 'Ingresa el código de 6 dígitos que muestra la aplicación.', tone: 'warning' });
+      return;
+    }
+    this.isSubmitting.set(true);
+    this.notice.set(null);
+    try {
+      this.session.start(await this.authApi.finishEnrollment(current.token, this.enrollCode().trim()));
+      await this.router.navigateByUrl(this.session.defaultRoute());
+    } catch (error) {
+      const text = error instanceof HttpErrorResponse && typeof error.error?.message === 'string'
+        ? error.error.message
+        : 'No se pudo activar la autenticación.';
+      this.notice.set({ text, tone: 'error' });
+    } finally { this.isSubmitting.set(false); }
   }
 
   protected continueWithGoogle(): void {
@@ -90,6 +121,8 @@ const googleLoginNotice = (reason: string | null): { text: string; tone: AlertTo
       return { text: 'El ingreso con Google todavía no está configurado.', tone: 'info' };
     case 'totp':
       return { text: 'Esta cuenta usa autenticación de dos pasos. Ingresa con tu contraseña y el código de la aplicación.', tone: 'warning' };
+    case 'enroll':
+      return { text: 'Debes activar la autenticación de dos pasos. Ingresa con tu usuario y contraseña.', tone: 'warning' };
     case 'failed':
       return { text: 'No se pudo completar el ingreso con Google.', tone: 'error' };
     default:

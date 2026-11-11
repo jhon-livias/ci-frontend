@@ -58,13 +58,31 @@ const isLoginResponseDto = (value: unknown): value is LoginResponseDto => {
 export class AuthApiService {
   private readonly http = inject(HttpClient);
 
-  async login(credentials: LoginRequest, recaptchaToken: string): Promise<AuthSessionSnapshot> {
+  async login(credentials: LoginRequest, recaptchaToken: string): Promise<AuthSessionSnapshot | { enrollmentToken: string }> {
     const response = await firstValueFrom(
       this.http.post<unknown>(
         '/api/v1/auth/login',
         { ...credentials, recaptchaToken },
         { withCredentials: true },
       ),
+    );
+    if (isRecord(response) && response['enrollmentRequired'] === true && typeof response['enrollmentToken'] === 'string') {
+      return { enrollmentToken: response['enrollmentToken'] };
+    }
+    return this.toSession(response);
+  }
+
+  async beginEnrollment(enrollmentToken: string): Promise<{ secret: string; qrSvg: string }> {
+    const response = await firstValueFrom(this.http.post<unknown>('/api/v1/auth/profile/totp/enroll', { enrollmentToken }));
+    if (!isRecord(response) || typeof response['secret'] !== 'string' || typeof response['qrSvg'] !== 'string') {
+      throw new Error('No se pudo preparar la autenticación.');
+    }
+    return { secret: response['secret'], qrSvg: response['qrSvg'] };
+  }
+
+  async finishEnrollment(enrollmentToken: string, code: string): Promise<AuthSessionSnapshot> {
+    const response = await firstValueFrom(
+      this.http.post<unknown>('/api/v1/auth/profile/totp/enroll/confirm', { enrollmentToken, code }, { withCredentials: true }),
     );
     return this.toSession(response);
   }
@@ -130,3 +148,5 @@ export class AuthApiService {
     };
   }
 }
+
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
